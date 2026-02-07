@@ -3,7 +3,7 @@ import axios from "axios";
 const API_BASE_URL = process.env.DJANGO_API;
 
 const api = axios.create({
-  baseURL: "http://fisioclinic-backed.onrender.com:10000/api",
+  baseURL: "https://fisioclinic-backed.onrender.com:10000/api",
 });
 
 // 🔹 Agregar access token
@@ -33,7 +33,7 @@ api.interceptors.response.use(
         if (!refresh) throw new Error("No refresh token");
 
         const response = await axios.post(
-          "http://fisioclinic-backed.onrender.com:10000/api/auth/refresh/",
+          "https://fisioclinic-backed.onrender.com:10000/api/auth/refresh/",
           {
             refresh,
           }
