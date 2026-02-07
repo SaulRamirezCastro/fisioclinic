@@ -1,0 +1,45 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15
+    container_name: physioclinic_db
+    restart: always
+    environment:
+      POSTGRES_DB: physioclinic
+      POSTGRES_USER: physioclinic_user
+      POSTGRES_PASSWORD: physioclinic_pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: .
+    container_name: physioclinic_backend
+    restart: always
+    command: gunicorn backend.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - .:/app
+      - media:/app/media
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+
+  frontend:
+      build: ./frontend
+      container_name: physioclinic_frontend
+      restart: always
+      command: npm run dev -- --host   # 👈 CLAVE
+      volumes:
+        - ./frontend:/app              # 👈 CLAVE
+        - /app/node_modules
+      ports:
+        - "5173:5173"
+      depends_on:
+        - backend
+
+volumes:
+  postgres_data:
+  media:
