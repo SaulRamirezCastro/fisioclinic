@@ -1,7 +1,9 @@
 import axios from "axios";
 
+const API_BASE_URL = process.env.DJANGO_API;
+
 const api = axios.create({
-  baseURL: "http://localhost:8000/api/",
+  baseURL: API_BASE_URL,
 });
 
 // 🔹 Agregar access token
