@@ -62,6 +62,11 @@ REST_FRAMEWORK = {
     "DEFAULT_FILTER_BACKENDS": [
         "rest_framework.filters.SearchFilter",
     ],
+    'DEFAULT_PARSER_CLASSES': [
+        'rest_framework.parsers.JSONParser',
+        'rest_framework.parsers.MultiPartParser',   # ← AGREGAR
+        'rest_framework.parsers.FormParser',         # ← AGREGAR
+    ],
     # "DEFAULT_PAGINATION_CLASS":
     #     "rest_framework.pagination.PageNumberPagination",
     # "PAGE_SIZE": 50,
@@ -95,7 +100,7 @@ TEMPLATES = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    "https://fisioclinic.onrender.com",
+    "http://localhost:5173",
 ]
 
 
