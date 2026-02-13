@@ -1,25 +1,35 @@
 FROM python:3.11-slim
 
+# ---------- Environment ----------
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
+# ---------- System Dependencies ----------
 RUN apt-get update && apt-get install -y \
     build-essential \
     libpq-dev \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
+# ---------- Install Python Dependencies ----------
 COPY requirements.txt .
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
-COPY entrypoint.sh /entrypoint.sh
+# ---------- Copy Project ----------
+COPY . .
+
+# ---------- Make Entrypoint Executable ----------
 RUN chmod +x /entrypoint.sh
 
-# 👇 COPIA TODO EL PROYECTO
-COPY . .
+# ---------- Create Non-Root User (Security Best Practice) ----------
+RUN adduser --disabled-password --no-create-home django
+USER django
 
 EXPOSE 8000
 
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["gunicorn", "backend.wsgi:application", "--bind", "0.0.0.0:8000"]
 
+CMD ["gunicorn", "backend.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3"]
