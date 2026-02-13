@@ -28,11 +28,12 @@ RUN chmod +x /entrypoint.sh
 COPY . .
 
 
-RUN mkdir -p /app/staticfiles /app/mediafiles && \
-    chown -R django:django /app
 
 # ---------- Create Non-Root User (Security Best Practice) ----------
 RUN adduser --disabled-password --no-create-home django
+RUN mkdir -p /app/staticfiles /app/mediafiles && \
+    chown -R django:django /app
+
 USER django
 
 EXPOSE 8000
