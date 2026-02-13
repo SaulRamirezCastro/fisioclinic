@@ -18,11 +18,14 @@ COPY requirements.txt .
 RUN pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# ---------- Copy Project ----------
-COPY . .
+
 
 # ---------- Make Entrypoint Executable ----------
+COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
+
+# ---------- Copy Project ----------
+COPY . .
 
 # ---------- Create Non-Root User (Security Best Practice) ----------
 RUN adduser --disabled-password --no-create-home django
