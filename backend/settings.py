@@ -156,6 +156,22 @@ INSTALLED_APPS = [
     'appointments',
 ]
 
+TEMPLATES = [
+    {
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [],   # 👈 VACÍO está bien
+        "APP_DIRS": True,   # ✅ ESTO ES CLAVE
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",  # ✅ OBLIGATORIO
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+            ],
+        },
+    },
+]
+
 # ===================================
 # SECURITY HEADERS
 # ===================================
