@@ -154,7 +154,6 @@ INSTALLED_APPS = [
     'users',
     'patients',
     'appointments',
-    'auth',
 ]
 
 # ===================================
