@@ -9,5 +9,5 @@ export const logout = () => {
   delete api.defaults.headers.common["Authorization"];
 
   // 3️⃣ Redirigir al login
-  window.location.href = "/login";
+  window.location.href = "/";
 };
