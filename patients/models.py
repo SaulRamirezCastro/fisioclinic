@@ -3,6 +3,13 @@ from datetime import date
 from django.db import models
 from django.conf import settings
 
+def patient_photo_path(instance, filename):
+    """
+    Guardar en: patients/{patient_id}/photos/{filename}
+    Ejemplo: patients/123/photos/foto_perfil.jpg
+    """
+    return f'patients/{instance.id}/photos/{filename}'
+
 class Patient(models.Model):
     # ===== DATOS GENERALES =====
     full_name = models.CharField(max_length=255)
@@ -43,7 +50,7 @@ class Patient(models.Model):
     )
 
     photo = models.ImageField(
-        upload_to="patients/photos/",
+        upload_to=patient_photo_path,
         null=True,
         blank=True
     )
