@@ -14,7 +14,7 @@ export default function LogoutButton() {
     delete api.defaults.headers.common["Authorization"];
 
     // 3️⃣ Redirigir al login
-    navigate("/login");
+    navigate("/");
   };
 
   return (
