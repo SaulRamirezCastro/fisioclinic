@@ -240,6 +240,8 @@ export default function AppointmentsCalendarView({
         start_time: selectedTime,
       });
       await refreshCalendar();
+      console.log('Cambiando de fecha:',date );
+      console.log('Cambiando de hota:',selectedTime );
       showAlert("success", "Horario actualizado");
     } catch (error: any) {
       pendingDrop.revert();
