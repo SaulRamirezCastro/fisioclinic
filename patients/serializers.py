@@ -12,7 +12,7 @@ class PrescriptionSerializer(serializers.ModelSerializer):
 class PatientSerializer(serializers.ModelSerializer):
     appointments = AppointmentSerializer(many=True, read_only=True)
     prescriptions = PrescriptionSerializer(many=True, read_only=True)
-    last_appointment = serializers.DateTimeField(read_only=True
+    last_appointment = serializers.DateTimeField(read_only=True)
 
     photo_url = serializers.SerializerMethodField()
     
@@ -38,6 +38,7 @@ class PatientSerializer(serializers.ModelSerializer):
                     hostname = settings.RENDER_EXTERNAL_HOSTNAME
                     return f'https://{hostname}{obj.photo.url}'
                 return obj.photo.url
+                
         return None
 
     class Meta:
