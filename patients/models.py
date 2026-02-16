@@ -10,6 +10,14 @@ def patient_photo_path(instance, filename):
     """
     return f'patients/{instance.id}/photos/{filename}'
 
+def prescription_upload_path(instance, filename):
+    """
+    Guardar en:prescriptions/paciente_id/nombre_archivo
+    Ejemplo: prescriptions/paciente_id/nombre_archivo.jpg
+    """
+    return f'prescriptions/{instance.id}/{filename}'
+
+
 class Patient(models.Model):
     # ===== DATOS GENERALES =====
     full_name = models.CharField(max_length=255)
@@ -97,7 +105,7 @@ class Prescription(models.Model):
     )
 
     file = models.FileField(
-        upload_to="prescriptions/"
+        upload_to=prescription_upload_path
     )
 
     description = models.CharField(
