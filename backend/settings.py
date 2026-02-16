@@ -119,7 +119,7 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # ===================================
 # Opción 1: Usar Render Disks (local en servidor)
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = '/opt/render/project/src/media'
 
 # Opción 2: Si decides usar S3 más adelante (comentado por ahora)
 # USE_S3 = os.environ.get('USE_S3', 'False').lower() == 'true'
