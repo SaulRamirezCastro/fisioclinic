@@ -15,14 +15,14 @@ class PatientSerializer(serializers.ModelSerializer):
     last_appointment = serializers.DateTimeField(read_only=True)
 
     photo_url = serializers.SerializerMethodField()
-    
+
     def validate_phone(self, value):
         if not value.isdigit():
             raise serializers.ValidationError(
                 "El teléfono solo debe contener números")
         return value
 
-     def get_photo_url(self, obj):
+    def get_photo_url(self, obj):
         """
         Retorna la URL completa de la foto
         """
@@ -38,9 +38,7 @@ class PatientSerializer(serializers.ModelSerializer):
                     hostname = settings.RENDER_EXTERNAL_HOSTNAME
                     return f'https://{hostname}{obj.photo.url}'
                 return obj.photo.url
-                
         return None
-
     class Meta:
         model = Patient
         fields = "__all__"
