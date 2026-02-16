@@ -82,6 +82,18 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
 
+    // ⚠️ FIX: Si el body es FormData, NO establecer Content-Type
+    // Axios lo hace automáticamente con el boundary correcto
+    if (config.data instanceof FormData) {
+      // Eliminar Content-Type para que Axios lo agregue automáticamente
+      if (config.headers['Content-Type']) {
+        delete config.headers['Content-Type'];
+      }
+    } else if (!config.headers['Content-Type']) {
+      // Para otros tipos de datos, usar JSON por defecto
+      config.headers['Content-Type'] = 'application/json';
+    }
+
     return config;
   },
   (error: AxiosError) => {
@@ -213,6 +225,8 @@ const getErrorMessage = (error: AxiosError<ErrorResponse>): string => {
       return "No tienes permisos para realizar esta acción.";
     case 404:
       return "Recurso no encontrado.";
+    case 415:
+      return "Tipo de contenido no soportado.";
     case 422:
       return "Error de validación en los datos enviados.";
     case 429:
@@ -254,6 +268,47 @@ export const getAccessToken = (): string | null => {
 export const setAuthTokens = (access: string, refresh: string): void => {
   localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, access);
   localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, refresh);
+};
+
+/**
+ * ✅ NUEVO: Helper para subir archivos
+ * Uso: uploadFile('/patients/123/upload_photo/', file)
+ */
+export const uploadFile = async (
+  url: string,
+  file: File,
+  fieldName: string = 'file',
+  additionalData?: Record<string, any>
+): Promise<any> => {
+  const formData = new FormData();
+  formData.append(fieldName, file);
+
+  // Agregar datos adicionales si existen
+  if (additionalData) {
+    Object.keys(additionalData).forEach((key) => {
+      formData.append(key, additionalData[key]);
+    });
+  }
+
+  // NO establecer Content-Type, Axios lo hace automáticamente
+  return api.post(url, formData);
+};
+
+/**
+ * ✅ NUEVO: Helper para subir múltiples archivos
+ */
+export const uploadFiles = async (
+  url: string,
+  files: File[],
+  fieldName: string = 'files'
+): Promise<any> => {
+  const formData = new FormData();
+
+  files.forEach((file) => {
+    formData.append(fieldName, file);
+  });
+
+  return api.post(url, formData);
 };
 
 export default api;
