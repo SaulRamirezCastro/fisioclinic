@@ -225,7 +225,7 @@ export default function AppointmentsCalendarView({
     if (!pendingDrop) return;
 
     const event = pendingDrop.event;
-    const date = event.start.toISOString().slice(0, 10);
+    const date = event.start.getLocalDateString().slice(0, 10);
 
     if (countAppointmentsAtHour(date, selectedTime, event.id) >= 7) {
       showAlert("warning", "No hay cupo disponible");
