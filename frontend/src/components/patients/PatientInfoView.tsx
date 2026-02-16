@@ -262,7 +262,7 @@ export default function PatientInfoView({
         <div className="w-40 h-40 rounded-2xl overflow-hidden bg-gradient-to-br from-emerald-100 to-emerald-200 flex items-center justify-center shadow-md shrink-0">
           {localPatient.photo ? (
             <img
-              src={localPatient.photo}
+              src={localPatient.photo_url}
               alt={localPatient.full_name}
               className="w-full h-full object-cover"
               onError={(e) => {
