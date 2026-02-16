@@ -7,6 +7,10 @@ import api from "../../api/axios";
 import DailyAppointmentsList from "./DailyAppointmentsList";
 import React from "react";
 
+/* ===================== LOG CONFIGURATION ===================== */
+
+const LOGS_ENABLED = false; // ✅ Cambia a true para habilitar logs, false para deshabilitarlos
+
 /* ===================== TYPES ===================== */
 
 type CalendarEvent = {
@@ -43,7 +47,12 @@ type AppointmentLog = {
 
 /* ===================== HELPERS ===================== */
 
-const toYYYYMMDD = (d: Date) => d.toLocaleDateString("en-CA");
+const toYYYYMMDD = (d: Date) => {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 const generateHours = () => {
   const hours: string[] = [];
@@ -78,6 +87,8 @@ const getLocalTimeString = (date: Date | string) => {
 /* ===================== LOGGING SYSTEM ===================== */
 
 const logAppointmentChange = (log: AppointmentLog) => {
+  if (!LOGS_ENABLED) return; // ✅ Si los logs están deshabilitados, no hacer nada
+  
   const formattedLog = {
     ...log,
     timestamp: new Date().toISOString(),
@@ -204,6 +215,8 @@ export default function AppointmentsCalendarView({
   /* ===================== FUNCIONES PARA VER LOGS ===================== */
   
   useEffect(() => {
+    if (!LOGS_ENABLED) return; // ✅ Si los logs están deshabilitados, no registrar funciones
+    
     (window as any).viewAppointmentLogs = () => {
       const logs = JSON.parse(localStorage.getItem('appointmentLogs') || '[]');
       console.table(logs);
@@ -241,11 +254,13 @@ export default function AppointmentsCalendarView({
 
     const load = async () => {
       try {
-        console.log('🔄 [CARGA] Iniciando carga de citas:', {
-          rangoInicio: calendarRange.start,
-          rangoFin: calendarRange.end,
-          timestamp: new Date().toISOString()
-        });
+        if (LOGS_ENABLED) {
+          console.log('🔄 [CARGA] Iniciando carga de citas:', {
+            rangoInicio: calendarRange.start,
+            rangoFin: calendarRange.end,
+            timestamp: new Date().toISOString()
+          });
+        }
         
         const data = await loadCalendarAppointments(
           calendarRange.start,
@@ -254,20 +269,24 @@ export default function AppointmentsCalendarView({
         
         setCalendarEvents(data);
         
-        console.log('✅ [CARGA] Citas cargadas exitosamente:', {
-          cantidad: data.length,
-          rangoInicio: calendarRange.start,
-          rangoFin: calendarRange.end,
-          citasPorEstado: data.reduce((acc, cita) => {
-            const status = cita.extendedProps?.status || 'sin_estado';
-            acc[status] = (acc[status] || 0) + 1;
-            return acc;
-          }, {} as Record<string, number>),
-          timestamp: new Date().toISOString()
-        });
+        if (LOGS_ENABLED) {
+          console.log('✅ [CARGA] Citas cargadas exitosamente:', {
+            cantidad: data.length,
+            rangoInicio: calendarRange.start,
+            rangoFin: calendarRange.end,
+            citasPorEstado: data.reduce((acc, cita) => {
+              const status = cita.extendedProps?.status || 'sin_estado';
+              acc[status] = (acc[status] || 0) + 1;
+              return acc;
+            }, {} as Record<string, number>),
+            timestamp: new Date().toISOString()
+          });
+        }
         
       } catch (error: any) {
-        console.error('❌ [CARGA] Error al cargar citas:', error);
+        if (LOGS_ENABLED) {
+          console.error('❌ [CARGA] Error al cargar citas:', error);
+        }
         
         logAppointmentChange({
           timestamp: new Date().toISOString(),
@@ -303,14 +322,16 @@ export default function AppointmentsCalendarView({
 
     const oldStatus = selectedEvent.extendedProps?.status;
     
-    console.log('🔄 [INICIO] Actualizando estado de cita:', {
-      citaId: selectedEvent.id,
-      titulo: selectedEvent.title,
-      estadoAnterior: oldStatus,
-      estadoNuevo: newStatus,
-      fecha: selectedEvent.start,
-      timestamp: new Date().toISOString()
-    });
+    if (LOGS_ENABLED) {
+      console.log('🔄 [INICIO] Actualizando estado de cita:', {
+        citaId: selectedEvent.id,
+        titulo: selectedEvent.title,
+        estadoAnterior: oldStatus,
+        estadoNuevo: newStatus,
+        fecha: selectedEvent.start,
+        timestamp: new Date().toISOString()
+      });
+    }
 
     try {
       await api.patch(`/appointments/${selectedEvent.id}/`, {
@@ -335,10 +356,14 @@ export default function AppointmentsCalendarView({
       showAlert("success", "Estado actualizado");
       setSelectedEvent(null);
       
-      console.log('✅ [ÉXITO] Estado actualizado correctamente');
+      if (LOGS_ENABLED) {
+        console.log('✅ [ÉXITO] Estado actualizado correctamente');
+      }
       
     } catch (error: any) {
-      console.error('❌ [ERROR] Error al actualizar estado:', error);
+      if (LOGS_ENABLED) {
+        console.error('❌ [ERROR] Error al actualizar estado:', error);
+      }
       
       logAppointmentChange({
         timestamp: new Date().toISOString(),
@@ -390,16 +415,18 @@ export default function AppointmentsCalendarView({
     
     setSelectedTime(localTime);
     
-    console.log('🖱️ [DRAG] Evento arrastrado:', {
-      citaId: info.event.id,
-      titulo: info.event.title,
-      fechaNueva: localDate,
-      horaNueva: localTime,
-      eventStartRaw: info.event.start.toString(),
-      eventStartISO: info.event.start.toISOString(),
-      eventStartLocal: localDate,
-      timestamp: new Date().toISOString()
-    });
+    if (LOGS_ENABLED) {
+      console.log('🖱️ [DRAG] Evento arrastrado:', {
+        citaId: info.event.id,
+        titulo: info.event.title,
+        fechaNueva: localDate,
+        horaNueva: localTime,
+        eventStartRaw: info.event.start.toString(),
+        eventStartISO: info.event.start.toISOString(),
+        eventStartLocal: localDate,
+        timestamp: new Date().toISOString()
+      });
+    }
     
     logAppointmentChange({
       timestamp: new Date().toISOString(),
@@ -429,21 +456,25 @@ export default function AppointmentsCalendarView({
     const oldDate = event._def.extendedProps.originalDate || getLocalDateString(pendingDrop.oldEvent.start);
     const oldTime = event._def.extendedProps.originalTime || getLocalTimeString(pendingDrop.oldEvent.start);
 
-    console.log('🕐 [INICIO] Cambiando horario de cita:', {
-      citaId: event.id,
-      titulo: event.title,
-      fechaAnterior: oldDate,
-      horaAnterior: oldTime,
-      fechaNueva: date,
-      horaNueva: selectedTime,
-      eventStartRaw: event.start.toString(),
-      eventStartISO: event.start.toISOString(),
-      eventStartLocal: date,
-      timestamp: new Date().toISOString()
-    });
+    if (LOGS_ENABLED) {
+      console.log('🕐 [INICIO] Cambiando horario de cita:', {
+        citaId: event.id,
+        titulo: event.title,
+        fechaAnterior: oldDate,
+        horaAnterior: oldTime,
+        fechaNueva: date,
+        horaNueva: selectedTime,
+        eventStartRaw: event.start.toString(),
+        eventStartISO: event.start.toISOString(),
+        eventStartLocal: date,
+        timestamp: new Date().toISOString()
+      });
+    }
 
     if (countAppointmentsAtHour(date, selectedTime, event.id) >= 7) {
-      console.warn('⚠️ [CAPACIDAD] No hay cupo disponible');
+      if (LOGS_ENABLED) {
+        console.warn('⚠️ [CAPACIDAD] No hay cupo disponible');
+      }
       
       logAppointmentChange({
         timestamp: new Date().toISOString(),
@@ -493,10 +524,14 @@ export default function AppointmentsCalendarView({
       await refreshCalendar();
       showAlert("success", "Horario actualizado");
       
-      console.log('✅ [ÉXITO] Horario actualizado correctamente');
+      if (LOGS_ENABLED) {
+        console.log('✅ [ÉXITO] Horario actualizado correctamente');
+      }
       
     } catch (error: any) {
-      console.error('❌ [ERROR] Error al actualizar horario:', error);
+      if (LOGS_ENABLED) {
+        console.error('❌ [ERROR] Error al actualizar horario:', error);
+      }
       
       logAppointmentChange({
         timestamp: new Date().toISOString(),
@@ -584,14 +619,16 @@ export default function AppointmentsCalendarView({
                 return acc;
               }, {} as Record<string, number>);
               
-              console.log('📅 [CLICK_DÍA] Usuario seleccionó fecha:', {
-                fechaSeleccionada: info.dateStr,
-                fechaAnterior: selectedDate,
-                diaSemana: new Date(info.dateStr).toLocaleDateString('es-MX', { weekday: 'long' }),
-                citasEnEseDia: citasDelDia.length,
-                clickPosition: { x: info.jsEvent.clientX, y: info.jsEvent.clientY },
-                timestamp: new Date().toISOString()
-              });
+              if (LOGS_ENABLED) {
+                console.log('📅 [CLICK_DÍA] Usuario seleccionó fecha:', {
+                  fechaSeleccionada: info.dateStr,
+                  fechaAnterior: selectedDate,
+                  diaSemana: new Date(info.dateStr).toLocaleDateString('es-MX', { weekday: 'long' }),
+                  citasEnEseDia: citasDelDia.length,
+                  clickPosition: { x: info.jsEvent.clientX, y: info.jsEvent.clientY },
+                  timestamp: new Date().toISOString()
+                });
+              }
               
               logAppointmentChange({
                 timestamp: new Date().toISOString(),
@@ -617,14 +654,16 @@ export default function AppointmentsCalendarView({
               })
             }
             eventClick={(info) => {
-              console.log('👆 [CLICK_EVENTO] Usuario clickeó evento:', {
-                citaId: info.event.id,
-                titulo: info.event.title,
-                fecha: toYYYYMMDD(info.event.start!),
-                hora: getLocalTimeString(info.event.start!),
-                estado: info.event.extendedProps?.status,
-                timestamp: new Date().toISOString()
-              });
+              if (LOGS_ENABLED) {
+                console.log('👆 [CLICK_EVENTO] Usuario clickeó evento:', {
+                  citaId: info.event.id,
+                  titulo: info.event.title,
+                  fecha: toYYYYMMDD(info.event.start!),
+                  hora: getLocalTimeString(info.event.start!),
+                  estado: info.event.extendedProps?.status,
+                  timestamp: new Date().toISOString()
+                });
+              }
               
               logAppointmentChange({
                 timestamp: new Date().toISOString(),
