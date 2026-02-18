@@ -88,11 +88,6 @@ export default function AttendanceTemplate({
 
   return (
     <div className="attendance-wrapper">
-      <div className="print-button-wrap">
-        <button onClick={handlePrint} className="print-button">
-          🖨️ Imprimir
-        </button>
-      </div>
 
       <div ref={sheetRef} className="attendance-sheet">
 
