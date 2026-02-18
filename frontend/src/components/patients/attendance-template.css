@@ -1,265 +1,276 @@
-:root {
-  --green:        #0C443E;
-  --green-light:  #f5faf9;
-  --green-border: #b2d4cf;
-  --green-soft:   #d0e8e4;
-  --green-row:    #f8fdfc;
-  --green-header: #d0e8e4;
+/* =====================================================
+   CONFIGURACIÓN GLOBAL
+===================================================== */
+
+* {
+  box-sizing: border-box;
 }
 
-/* ── Wrapper ─────────────────────────────────────────── */
-.attendance-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  background: #f0f0f0;
-  padding: 20px 0;
-  min-height: 100vh;
+body {
+  margin: 0;
+  padding: 0;
+  background: #e5e5e5;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #000;
 }
 
-/* ── Print button ────────────────────────────────────── */
-.print-button-wrap {
-  display: flex;
-  justify-content: center;
-  padding: 0 0 14px;
-}
+/* =====================================================
+   CONTENEDOR PRINCIPAL - HOJA CARTA
+===================================================== */
 
-.print-button {
-  background-color: var(--green);
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  padding: 8px 24px;
-  font-size: 13px;
-  font-weight: bold;
-  cursor: pointer;
-  letter-spacing: 0.5px;
-  transition: opacity 0.2s;
-}
-
-.print-button:hover {
-  opacity: 0.85;
-}
-
-/* ── Sheet ───────────────────────────────────────────── */
 .attendance-sheet {
-  width: 21.59cm;
-  min-height: 27.94cm;
-  background: #fff;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
-  display: flex;
-  flex-direction: column;
-  font-family: "Segoe UI", Arial, sans-serif;
+  width: 216mm;
+  height: 279mm; /* 🔥 Cambiado de min-height */
+
+  margin: 30px auto;
+  padding: 20mm 20mm 20mm 30mm;
+
+  background: white;
+
+  border-radius: 4px;
+  border: 1px solid #cfcfcf;
+
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.15);
+
+  overflow: hidden; /* 🔥 Evita que se cree otra hoja */
 }
 
-/* ── Header ──────────────────────────────────────────── */
+/* =====================================================
+   HEADER
+===================================================== */
+
 .header {
-  display: flex;
+  display: grid;
+  grid-template-columns: 180px 1fr 180px;
   align-items: center;
-  padding: 18px 28px 14px;
-  border-bottom: 3px solid var(--green);
-  gap: 20px;
+
+  border-bottom: 2px solid black;
+  padding-bottom: 12px;
+  margin-bottom: 18px;
+}
+
+.header-logo {
+  display: flex;
+  justify-content: flex-start;
 }
 
 .header-logo img {
-  width: 160px;
+  max-width: 160px;
+  height: auto;
+  object-fit: contain;
+}
+
+.header-spacer {
+  width: 180px;
 }
 
 .header-text {
   flex: 1;
+  text-align: center;
 }
 
 .header-title {
-  font-size: 22px;
-  font-weight: 900;
-  color: var(--green);
-  letter-spacing: 3px;
-  line-height: 1;
+  font-size: 20px;
+  font-weight: bold;
+  letter-spacing: 1px;
 }
 
 .header-subtitle {
-  font-size: 10px;
-  color: var(--green);
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  margin-bottom: 8px;
+  font-size: 13px;
+  margin-top: 3px;
 }
 
 .document-title {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: bold;
-  color: var(--green);
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  border-top: 1px solid var(--green);
-  padding-top: 6px;
-  margin-top: 2px;
+  margin-top: 8px;
+}
+
+.document-month {
+  font-size: 13px;
+  margin-top: 3px;
 }
 
 .document-period {
-  font-size: 10px;
-  color: #333;
-  margin-top: 4px;
-  line-height: 1.6;
+  font-size: 13px;
+  margin-top: 6px;
+  font-weight: bold;
 }
 
-/* ── Patient ─────────────────────────────────────────── */
+/* =====================================================
+   PACIENTE
+===================================================== */
+
 .patient-line {
-  padding: 10px 28px;
-  font-size: 11px;
-  color: #222;
-  border-bottom: 1px solid var(--green-soft);
-  background: var(--green-light);
+  margin-top: 15px;
+  font-size: 13px;
 }
 
-/* ── Attendance table ────────────────────────────────── */
+/* =====================================================
+   LISTA DE ASISTENCIAS
+===================================================== */
+
 .attendance-list-container {
-  flex: 1;
-  padding: 16px 28px;
+  margin-top: 20px;
 }
 
 .attendance-list-title {
-  font-size: 10px;
   font-weight: bold;
-  color: var(--green);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  border-bottom: 2px solid var(--green);
-  padding-bottom: 5px;
+  border-bottom: 1px solid black;
+  padding-bottom: 4px;
   margin-bottom: 10px;
+  font-size: 13px;
 }
 
-.attendance-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 11px;
+.attendance-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
-.attendance-table thead tr {
-  background-color: var(--green-header);
+.attendance-item {
+  border-bottom: 1px dotted black;
+  padding: 4px 0;
+  font-size: 13px;
+
+  page-break-inside: avoid;
 }
 
-.attendance-table thead th {
-  color: var(--green);
-  font-weight: bold;
-  font-size: 9.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  padding: 7px 12px;
-  border: 1px solid var(--green-border);
-  text-align: left;
-}
+/* =====================================================
+   OBSERVACIONES
+===================================================== */
 
-.attendance-table tbody td {
-  border: 1px solid var(--green-soft);
-  padding: 6px 12px;
-  color: #333;
-  vertical-align: middle;
-}
-
-.attendance-table tbody .row-even {
-  background-color: var(--green-row);
-}
-
-.attendance-table .col-num {
-  width: 36px;
-  text-align: center;
-  font-weight: bold;
-  color: var(--green);
-  background-color: #eaf4f2;
-}
-
-.attendance-table thead .col-num {
-  background-color: var(--green-header);
-  color: var(--green);
-}
-
-.attendance-table .col-date {
-  width: 220px;
-}
-
-.attendance-table .col-sign {
-  height: 36px;
-}
-
-/* ── Notes ───────────────────────────────────────────── */
 .notes-section {
-  padding: 0 28px 16px;
+  margin-top: 30px;
+  page-break-inside: avoid;
 }
 
 .notes-title {
-  font-size: 10px;
   font-weight: bold;
-  color: var(--green);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  border-bottom: 2px solid var(--green);
-  padding-bottom: 4px;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
+  font-size: 13px;
 }
 
-.notes-textarea {
-  width: 100%;
-  min-height: 60px;
-  font-size: 10.5px;
-  color: #333;
-  line-height: 1.8;
-  border: 1px solid var(--green-border);
-  border-radius: 3px;
-  padding: 8px 10px;
-  background: var(--green-light);
-  resize: vertical;
-  font-family: inherit;
-  outline: none;
+.notes-box {
+  border: 1px solid black;
+  min-height: 80px;
+  padding: 8px;
+  white-space: pre-line;
+  font-size: 13px;
 }
 
-.notes-textarea:focus {
-  border-color: var(--green);
-}
+/* =====================================================
+   FIRMA
+===================================================== */
 
-/* ── Footer ──────────────────────────────────────────── */
 .footer-section {
-  margin-top: auto;
-  border-top: 2px solid var(--green);
+  margin-top: 50px;
+  text-align: center;
+  page-break-inside: avoid;
 }
 
 .footer-attention {
-  text-align: center;
-  font-size: 11px;
-  font-weight: bold;
-  color: var(--green);
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  padding: 12px 0 2px;
+  letter-spacing: 4px;
+  margin-bottom: 40px;
+  font-weight: 500;
 }
 
 .footer-professional {
-  text-align: center;
-  font-size: 11px;
-  font-weight: bold;
-  color: #222;
-  padding: 2px 0;
+  margin-top: 30px;
+  font-size: 14px;
 }
 
 .footer-license {
-  text-align: center;
-  font-size: 10px;
-  color: #555;
-  padding-bottom: 10px;
-}
-
-.footer-social-img {
-  width: 100%;
-  padding: 0 28px;
-  display: block;
+  font-weight: bold;
+  margin-top: 5px;
+  font-size: 13px;
 }
 
 .footer-bar {
-  background-color: var(--green);
-  color: #fff;
-  font-size: 9px;
-  font-style: italic;
-  text-align: center;
-  padding: 5px 20px;
-  line-height: 1.5;
+  margin-top: 20px;
+  background: #2f4f4f;
+  color: white;
+  padding: 8px 12px;
+  font-size: 12px;
 }
+
+.footer-social {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  font-size: 13px;
+}
+
+/* =====================================================
+   EDITOR DE OBSERVACIONES (NO SE IMPRIME)
+===================================================== */
+
+.notes-editor {
+  width: 216mm;
+  margin: 20px auto;
+}
+
+.notes-editor textarea {
+  width: 100%;
+  padding: 8px;
+  resize: vertical;
+}
+
+/* =====================================================
+   CONFIGURACIÓN DE IMPRESIÓN
+===================================================== */
+
+@page {
+  size: letter;
+  margin: 0;
+}
+
+@media print {
+
+  html, body {
+    width: 216mm;
+    height: 279mm;
+    margin: 0;
+    padding: 0;
+    background: white;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .attendance-sheet,
+  .attendance-sheet * {
+    visibility: visible;
+  }
+
+  .attendance-sheet {
+    position: absolute;
+    top: 0;
+    left: 0;
+
+    width: 216mm;
+    height: 279mm; /* 🔥 Corregido */
+
+    margin: 0;
+    padding: 20mm 20mm 20mm 30mm;
+
+    border: none;
+    box-shadow: none;
+    background: white;
+
+    overflow: hidden;
+  }
+
+  .notes-editor,
+  button {
+    display: none !important;
+  }
+}
+
+/* =====================================================
+   CONTROL DE SALTO DE PÁGINA
+===================================================== */
+
+/* 🔥 Eliminado page-break-after: always */
