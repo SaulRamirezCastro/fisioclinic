@@ -23,6 +23,7 @@ urlpatterns = [
     path("api/auth/login/", EmailLoginView.as_view()),
     path("api/auth/refresh/", TokenRefreshView.as_view()),
     path("api/", include(router.urls)),
+    re_path(r'^(?!api/|admin/).*$', TemplateView.as_view(template_name='index.html')),
 ]
 if settings.DEBUG:
     urlpatterns += static(
