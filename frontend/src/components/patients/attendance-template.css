@@ -1,10 +1,10 @@
-/* ── Variables ─────────────────────────────────────── */
 :root {
   --green:        #0C443E;
   --green-light:  #f5faf9;
   --green-border: #b2d4cf;
   --green-soft:   #d0e8e4;
   --green-row:    #f8fdfc;
+  --green-header: #d0e8e4;
 }
 
 /* ── Print button ───────────────────────────────────── */
@@ -103,7 +103,7 @@
   background: var(--green-light);
 }
 
-/* ── Attendance list ─────────────────────────────────── */
+/* ── Attendance table ────────────────────────────────── */
 .attendance-list-container {
   flex: 1;
   padding: 16px 28px;
@@ -120,21 +120,61 @@
   margin-bottom: 10px;
 }
 
-.attendance-list {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 4px 20px;
-}
-
-.attendance-item {
+.attendance-table {
+  width: 100%;
+  border-collapse: collapse;
   font-size: 11px;
-  color: #333;
-  padding: 5px 8px;
-  border-bottom: 1px solid var(--green-soft);
 }
 
-.attendance-item:nth-child(odd) {
-  background: var(--green-row);
+.attendance-table thead tr {
+  background-color: var(--green-header);
+}
+
+.attendance-table thead th {
+  color: var(--green);
+  font-weight: bold;
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 7px 12px;
+  border: 1px solid var(--green-border);
+  text-align: left;
+}
+
+.attendance-table tbody td {
+  border: 1px solid var(--green-soft);
+  padding: 6px 12px;
+  color: #333;
+  vertical-align: middle;
+}
+
+.attendance-table tbody .row-even {
+  background-color: var(--green-row);
+}
+
+.attendance-table .col-num {
+  width: 36px;
+  text-align: center;
+  font-weight: bold;
+  color: var(--green);
+  background-color: #eaf4f2;
+}
+
+.attendance-table thead .col-num {
+  background-color: var(--green-header);
+}
+
+.attendance-table .col-date {
+  width: 220px;
+}
+
+.attendance-table .col-sign {
+  /* firma: espacio amplio en blanco */
+  min-height: 36px;
+}
+
+.attendance-table tbody .col-sign {
+  height: 36px;
 }
 
 /* ── Notes ───────────────────────────────────────────── */
@@ -217,34 +257,4 @@
   text-align: center;
   padding: 5px 20px;
   line-height: 1.5;
-}
-
-/* ── Print ───────────────────────────────────────────── */
-@media print {
-  @page {
-    size: letter;
-    margin: 0;
-  }
-
-  body {
-    background: none !important;
-    padding: 0 !important;
-    margin: 0 !important;
-  }
-
-  .no-print {
-    display: none !important;
-  }
-
-  .attendance-sheet {
-    box-shadow: none;
-    width: 100vw;
-    min-height: 100vh;
-  }
-
-  .notes-textarea {
-    border: none !important;
-    resize: none !important;
-    background: transparent !important;
-  }
 }
