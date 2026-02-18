@@ -21,6 +21,7 @@ export default function AttendanceTemplate({
   professionalName = "Lic. T.F. Salvador Antonio Pomar Castañeda",
   professionalLicense = "CÉD. PROF. 3719269",
 }: Props) {
+  const sheetRef = useRef<HTMLDivElement>(null);
   const [notes, setNotes] = useState("");
 
   const formatDate = (date?: string | null) => {
@@ -34,7 +35,61 @@ export default function AttendanceTemplate({
     });
   };
 
-  const handlePrint = () => window.print();
+  const handlePrint = () => {
+    const content = sheetRef.current;
+    if (!content) return;
+
+    const printWindow = window.open("", "_blank", "width=900,height=700");
+    if (!printWindow) return;
+
+    // Recoger todos los estilos de la página actual
+    const styles = Array.from(document.styleSheets)
+      .map((sheet) => {
+        try {
+          return Array.from(sheet.cssRules)
+            .map((rule) => rule.cssText)
+            .join("\n");
+        } catch {
+          return "";
+        }
+      })
+      .join("\n");
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html lang="es">
+        <head>
+          <meta charset="UTF-8" />
+          <title>Relación de Asistencias</title>
+          <style>
+            ${styles}
+            @page { size: letter; margin: 0; }
+            body { margin: 0; padding: 0; background: #fff; }
+            .attendance-sheet { box-shadow: none !important; }
+            .notes-textarea {
+              border: none !important;
+              resize: none !important;
+              background: transparent !important;
+              pointer-events: none;
+            }
+            .signature-field {
+              pointer-events: none;
+            }
+          </style>
+        </head>
+        <body>${content.innerHTML}</body>
+      </html>
+    `);
+
+    printWindow.document.close();
+    printWindow.focus();
+
+    // Esperar a que carguen las imágenes antes de imprimir
+    printWindow.onload = () => {
+      printWindow.print();
+      printWindow.close();
+    };
+  };
 
   const sortedDates = [...attendedDates].sort(
     (a, b) => new Date(a).getTime() - new Date(b).getTime()
@@ -42,14 +97,14 @@ export default function AttendanceTemplate({
 
   return (
     <>
-      {/* Botón imprimir — oculto al imprimir */}
-      <div className="no-print print-button-wrap">
+      {/* Botón imprimir */}
+      <div className="print-button-wrap">
         <button onClick={handlePrint} className="print-button">
           🖨️ Imprimir
         </button>
       </div>
 
-      <div className="attendance-sheet">
+      <div ref={sheetRef} className="attendance-sheet">
 
         {/* HEADER */}
         <div className="header">
@@ -78,16 +133,27 @@ export default function AttendanceTemplate({
           <strong>PACIENTE:</strong> {patientName}
         </div>
 
-        {/* LISTA */}
+        {/* TABLA DE ASISTENCIAS HORIZONTAL */}
         <div className="attendance-list-container">
           <div className="attendance-list-title">Fecha de Asistencia</div>
-          <div className="attendance-list">
-            {sortedDates.map((date, index) => (
-              <div key={date} className="attendance-item">
-                {index + 1}. {formatDate(date)}
-              </div>
-            ))}
-          </div>
+          <table className="attendance-table">
+            <thead>
+              <tr>
+                <th className="col-num">#</th>
+                <th className="col-date">Fecha</th>
+                <th className="col-sign">Firma del Paciente</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sortedDates.map((date, index) => (
+                <tr key={date} className={index % 2 === 0 ? "row-even" : ""}>
+                  <td className="col-num">{index + 1}</td>
+                  <td className="col-date">{formatDate(date)}</td>
+                  <td className="col-sign signature-field"></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
 
         {/* OBSERVACIONES */}
