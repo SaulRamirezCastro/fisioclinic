@@ -42,53 +42,46 @@ export default function AttendanceTemplate({
     const printWindow = window.open("", "_blank", "width=900,height=700");
     if (!printWindow) return;
 
-    // Recoger todos los estilos de la página actual
-    const styles = Array.from(document.styleSheets)
-      .map((sheet) => {
+    // Recopilar CSS de la página actual
+    const cssText = Array.from(document.styleSheets)
+      .flatMap((sheet) => {
         try {
-          return Array.from(sheet.cssRules)
-            .map((rule) => rule.cssText)
-            .join("\n");
+          return Array.from(sheet.cssRules).map((r) => r.cssText);
         } catch {
-          return "";
+          return [];
         }
       })
       .join("\n");
 
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html lang="es">
-        <head>
-          <meta charset="UTF-8" />
-          <title>Relación de Asistencias</title>
-          <style>
-            ${styles}
-            @page { size: letter; margin: 0; }
-            body { margin: 0; padding: 0; background: #fff; }
-            .attendance-sheet { box-shadow: none !important; }
-            .notes-textarea {
-              border: none !important;
-              resize: none !important;
-              background: transparent !important;
-              pointer-events: none;
-            }
-            .signature-field {
-              pointer-events: none;
-            }
-          </style>
-        </head>
-        <body>${content.innerHTML}</body>
-      </html>
-    `);
-
-    printWindow.document.close();
-    printWindow.focus();
-
-    // Esperar a que carguen las imágenes antes de imprimir
-    printWindow.onload = () => {
-      printWindow.print();
-      printWindow.close();
+    const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Relación de Asistencias</title>
+  <style>
+    ${cssText}
+    @page { size: letter; margin: 0; }
+    body { margin: 0; padding: 0; background: #fff; }
+    .attendance-sheet { box-shadow: none !important; margin: 0 !important; }
+    .notes-textarea { border: none !important; resize: none !important; background: transparent !important; }
+  </style>
+</head>
+<body>
+  ${content.outerHTML}
+  <script>
+    window.onload = function() {
+      setTimeout(function() {
+        window.print();
+        window.close();
+      }, 300);
     };
+  </script>
+</body>
+</html>`;
+
+    printWindow.document.open();
+    printWindow.document.write(html);
+    printWindow.document.close();
   };
 
   const sortedDates = [...attendedDates].sort(
@@ -96,8 +89,8 @@ export default function AttendanceTemplate({
   );
 
   return (
-    <>
-      {/* Botón imprimir */}
+    <div className="attendance-wrapper">
+      {/* Botón imprimir — único, fuera del sheet */}
       <div className="print-button-wrap">
         <button onClick={handlePrint} className="print-button">
           🖨️ Imprimir
@@ -133,7 +126,7 @@ export default function AttendanceTemplate({
           <strong>PACIENTE:</strong> {patientName}
         </div>
 
-        {/* TABLA DE ASISTENCIAS HORIZONTAL */}
+        {/* TABLA DE ASISTENCIAS */}
         <div className="attendance-list-container">
           <div className="attendance-list-title">Fecha de Asistencia</div>
           <table className="attendance-table">
@@ -149,7 +142,7 @@ export default function AttendanceTemplate({
                 <tr key={date} className={index % 2 === 0 ? "row-even" : ""}>
                   <td className="col-num">{index + 1}</td>
                   <td className="col-date">{formatDate(date)}</td>
-                  <td className="col-sign signature-field"></td>
+                  <td className="col-sign"></td>
                 </tr>
               ))}
             </tbody>
@@ -186,6 +179,6 @@ export default function AttendanceTemplate({
         </div>
 
       </div>
-    </>
+    </div>
   );
 }
