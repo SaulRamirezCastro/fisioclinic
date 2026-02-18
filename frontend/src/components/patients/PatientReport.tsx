@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import api from "../../api/axios";
-import AttendanceTemplate from "./AttendanceTemplate";
+import AttendanceTemplate, { AttendanceTemplateRef } from "./AttendanceTemplate";
 import React from "react";
 
 /* =============================
@@ -46,6 +46,8 @@ const formatDate = (date: string) => {
    Componente Principal
 ============================= */
 export default function PatientReport({ patient }: Props) {
+  const attendanceRef = useRef<AttendanceTemplateRef>(null);
+
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
 
@@ -149,14 +151,21 @@ export default function PatientReport({ patient }: Props) {
             <EmptyState />
           ) : (
             <>
+              <div className="text-right">
+                <button
+                  onClick={() => attendanceRef.current?.print()}
+                  className="bg-slate-700 text-white px-4 py-2 rounded-lg"
+                >
+                  🖨️ Imprimir
+                </button>
+              </div>
               <AttendanceTemplate
+                ref={attendanceRef}
                 patientName={patient.full_name}
                 periodStart={start}
                 periodEnd={end}
                 attendedDates={attendedDates}
               />
-
-              <PrintButton />
             </>
           )}
         </>
@@ -206,9 +215,7 @@ function ModeButton({ active, label, onClick }: any) {
   );
 }
 
-/* ===== BOTÓN CORREGIDO TAILWIND ===== */
 function ActionButton({ loading, label, onClick, variant }: any) {
-
   const variants: Record<string, string> = {
     emerald: "bg-emerald-600 hover:bg-emerald-700",
     indigo: "bg-indigo-600 hover:bg-indigo-700",
@@ -329,20 +336,6 @@ function EmptyState() {
     </div>
   );
 }
-
-function PrintButton() {
-  return (
-    <div className="text-right mt-4">
-      <button
-        onClick={() => window.print()}
-        className="bg-slate-700 text-white px-4 py-2 rounded-lg"
-      >
-        Imprimir
-      </button>
-    </div>
-  );
-}
-
 
 function Stat({ label, value }: any) {
   return (
