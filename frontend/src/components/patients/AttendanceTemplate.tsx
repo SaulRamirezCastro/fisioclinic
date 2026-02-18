@@ -1,11 +1,6 @@
 import "./attendance-template.css";
-import React, { useImperativeHandle, useRef, useState, forwardRef } from "react";
+import React, { useRef, useState } from "react";
 import logo from "../../assets/logo.png";
-import social from "../../assets/social.png";
-
-export interface AttendanceTemplateRef {
-  print: () => void;
-}
 
 interface Props {
   patientName: string;
@@ -16,21 +11,26 @@ interface Props {
   professionalLicense?: string;
 }
 
-const AttendanceTemplate = forwardRef<AttendanceTemplateRef, Props>(function AttendanceTemplate({
+export default function AttendanceTemplate({
   patientName,
   periodStart,
   periodEnd,
   attendedDates,
   professionalName = "Lic. T.F. Salvador Antonio Pomar Castañeda",
   professionalLicense = "CÉD. PROF. 3719269",
-}, ref) {
-  const sheetRef = useRef<HTMLDivElement>(null);
+}: Props) {
+
+  const printRef = useRef<HTMLDivElement>(null);
   const [notes, setNotes] = useState("");
 
   const formatDate = (date?: string | null) => {
     if (!date) return "—";
+
+    // Separar manualmente YYYY-MM-DD
     const [year, month, day] = date.split("-").map(Number);
+
     const parsed = new Date(year, month - 1, day);
+
     return parsed.toLocaleDateString("es-MX", {
       day: "2-digit",
       month: "long",
@@ -38,82 +38,41 @@ const AttendanceTemplate = forwardRef<AttendanceTemplateRef, Props>(function Att
     });
   };
 
-  useImperativeHandle(ref, () => ({
-    print: handlePrint,
-  }));
 
   const handlePrint = () => {
-    const content = sheetRef.current;
-    if (!content) return;
-
-    const printWindow = window.open("", "_blank", "width=900,height=700");
-    if (!printWindow) return;
-
-    const cssText = Array.from(document.styleSheets)
-      .flatMap((sheet) => {
-        try {
-          return Array.from(sheet.cssRules).map((r) => r.cssText);
-        } catch {
-          return [];
-        }
-      })
-      .join("\n");
-
-    const html = `<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8"/>
-  <title>Relación de Asistencias</title>
-  <style>
-    ${cssText}
-    @page { size: letter; margin: 0; }
-    body { margin: 0; padding: 0; background: #fff; }
-    .attendance-sheet { box-shadow: none !important; margin: 0 !important; }
-    .notes-textarea { border: none !important; resize: none !important; background: transparent !important; }
-  </style>
-</head>
-<body>
-  ${content.outerHTML}
-  <script>
-    window.onload = function() {
-      setTimeout(function() {
-        window.print();
-        window.close();
-      }, 300);
-    };
-  </script>
-</body>
-</html>`;
-
-    printWindow.document.open();
-    printWindow.document.write(html);
-    printWindow.document.close();
+    window.print();
   };
 
-  const sortedDates = [...attendedDates].sort(
-    (a, b) => new Date(a).getTime() - new Date(b).getTime()
-  );
-
   return (
-    <div ref={sheetRef} className="attendance-sheet">
+    <div>
+
+      <div ref={printRef} className="attendance-sheet">
 
         {/* HEADER */}
         <div className="header">
+
           <div className="header-logo">
-            <img src={logo} alt="Logo Fisioclinic" />
+            <img src={logo} alt="Logo" />
           </div>
+
           <div className="header-text">
             <div className="header-title">FISIOCLINIC</div>
+
             <div className="header-subtitle">
               Centro de Terapia Física y Rehabilitación
             </div>
-            <div className="document-title">Relación de Asistencias</div>
+
+            <div className="document-title">
+              RELACIÓN DE ASISTENCIAS
+            </div>
+
             <div className="document-period">
-              <strong>PERIODO DE ASISTENCIA:</strong>
-              <br />
+              <strong>PERIODO DE ASISTENCIA:</strong>{" "}
+              <br/>
               {formatDate(periodStart)} AL {formatDate(periodEnd)}
             </div>
           </div>
+
         </div>
 
         {/* PACIENTE */}
@@ -121,57 +80,71 @@ const AttendanceTemplate = forwardRef<AttendanceTemplateRef, Props>(function Att
           <strong>PACIENTE:</strong> {patientName}
         </div>
 
-        {/* TABLA DE ASISTENCIAS */}
+        {/* LISTA */}
         <div className="attendance-list-container">
-          <div className="attendance-list-title">Fecha de Asistencia</div>
-          <table className="attendance-table">
-            <thead>
-              <tr>
-                <th className="col-num">#</th>
-                <th className="col-date">Fecha</th>
-                <th className="col-sign">Firma del Paciente</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sortedDates.map((date, index) => (
-                <tr key={date} className={index % 2 === 0 ? "row-even" : ""}>
-                  <td className="col-num">{index + 1}</td>
-                  <td className="col-date">{formatDate(date)}</td>
-                  <td className="col-sign"></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+
+          <div className="attendance-list-title">
+            Fecha de Asistencia
+          </div>
+
+          <div className="attendance-list">
+            {[...attendedDates]
+              .sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
+              .map((date, index) => (
+                <div key={date} className="attendance-item">
+                  {index + 1}. {formatDate(date)}
+                </div>
+            ))}
+          </div>
+
         </div>
 
         {/* OBSERVACIONES */}
-        <div className="notes-section">
-          <div className="notes-title">Observaciones</div>
-          <textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="Escribe observaciones aquí..."
-            className="notes-textarea"
-          />
+        {notes && (
+          <div className="notes-section">
+            <div className="notes-title">OBSERVACIONES</div>
+            <div className="notes-box">{notes}</div>
+          </div>
+        )}
+
+      {/* FOOTER */}
+      <div className="footer-section">
+
+        <div className="footer-attention">
+          ATENTAMENTE
         </div>
 
-        {/* FOOTER */}
-        <div className="footer-section">
-          <div className="footer-attention">Atentamente</div>
-          <div className="footer-professional">{professionalName}</div>
-          <div className="footer-license">{professionalLicense}</div>
-          <img src={social} alt="Redes sociales Fisioclinic" className="footer-social-img" />
-          <div className="footer-bar">
-            Bernal Díaz del Castillo #160 entre Paseo de las Flores y S.S. Juan
-            Pablo II, Fracc. Virginia, Boca del Río, Ver.&nbsp;&nbsp;
-            <strong>Teléfono</strong> (2299 27 3730)&nbsp;
-            <strong>Móvil</strong> (2291 21 0390)
-          </div>
+        <div className="footer-professional">
+          Lic. T.F. Salvador Antonio Pomar Castañeda
+        </div>
+
+        <div className="footer-license">
+          CED. PROF. 3719269
+        </div>
+
+        {/* Redes */}
+        <div className="footer-social">
+
+          <div>Fisioclinic_ver</div>
+          <div>www.fisioclinic.com.mx</div>
+          <div>Fisioclinic s.c.</div>
+
+        </div>
+
+        {/* Banda inferior */}
+        <div className="footer-bar">
+          Bernal Díaz del Castillo #160 entre Paseo de las Flores y S.S. Juan Pablo II,
+          Fracc. Virginia, Boca del Río, Ver.
+          Teléfono (2299 27 3730) Móvil (2291 21 0390)
         </div>
 
       </div>
+
+
+      </div>
+
     </div>
   );
-});
+}
 
-export default AttendanceTemplate;
+
