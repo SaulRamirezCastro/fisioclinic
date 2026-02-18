@@ -7,11 +7,21 @@
   --green-header: #d0e8e4;
 }
 
-/* ── Print button ───────────────────────────────────── */
+/* ── Wrapper ─────────────────────────────────────────── */
+.attendance-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #f0f0f0;
+  padding: 20px 0;
+  min-height: 100vh;
+}
+
+/* ── Print button ────────────────────────────────────── */
 .print-button-wrap {
   display: flex;
   justify-content: center;
-  padding: 16px 0 8px;
+  padding: 0 0 14px;
 }
 
 .print-button {
@@ -31,11 +41,10 @@
   opacity: 0.85;
 }
 
-/* ── Sheet ──────────────────────────────────────────── */
+/* ── Sheet ───────────────────────────────────────────── */
 .attendance-sheet {
   width: 21.59cm;
   min-height: 27.94cm;
-  margin: 0 auto;
   background: #fff;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
   display: flex;
@@ -43,7 +52,7 @@
   font-family: "Segoe UI", Arial, sans-serif;
 }
 
-/* ── Header ─────────────────────────────────────────── */
+/* ── Header ──────────────────────────────────────────── */
 .header {
   display: flex;
   align-items: center;
@@ -162,6 +171,7 @@
 
 .attendance-table thead .col-num {
   background-color: var(--green-header);
+  color: var(--green);
 }
 
 .attendance-table .col-date {
@@ -169,11 +179,6 @@
 }
 
 .attendance-table .col-sign {
-  /* firma: espacio amplio en blanco */
-  min-height: 36px;
-}
-
-.attendance-table tbody .col-sign {
   height: 36px;
 }
 
