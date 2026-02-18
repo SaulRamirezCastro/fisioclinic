@@ -108,8 +108,8 @@ DATABASES = {
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
-] if os.path.exists(os.path.join(BASE_DIR, 'static')) else []
+    os.path.join(BASE_DIR,'frontend/dist'),
+] if os.path.exists(os.path.join(BASE_DIR, 'frontend/dist')) else []
 
 # WhiteNoise configuration
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
@@ -170,7 +170,7 @@ INSTALLED_APPS = [
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],   # 👈 VACÍO está bien
+        "DIRS": [os.path.join(BASE_DIR, 'frontend/dist')],   # 👈 VACÍO está bien
         "APP_DIRS": True,   # ✅ ESTO ES CLAVE
         "OPTIONS": {
             "context_processors": [
