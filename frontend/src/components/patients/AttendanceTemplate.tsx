@@ -1,7 +1,11 @@
 import "./attendance-template.css";
-import React, { useRef, useState } from "react";
+import React, { useImperativeHandle, useRef, useState, forwardRef } from "react";
 import logo from "../../assets/logo.png";
 import social from "../../assets/social.png";
+
+export interface AttendanceTemplateRef {
+  print: () => void;
+}
 
 interface Props {
   patientName: string;
@@ -12,14 +16,14 @@ interface Props {
   professionalLicense?: string;
 }
 
-export default function AttendanceTemplate({
+const AttendanceTemplate = forwardRef<AttendanceTemplateRef, Props>(function AttendanceTemplate({
   patientName,
   periodStart,
   periodEnd,
   attendedDates,
   professionalName = "Lic. T.F. Salvador Antonio Pomar Castañeda",
   professionalLicense = "CÉD. PROF. 3719269",
-}: Props) {
+}, ref) {
   const sheetRef = useRef<HTMLDivElement>(null);
   const [notes, setNotes] = useState("");
 
@@ -33,6 +37,10 @@ export default function AttendanceTemplate({
       year: "numeric",
     });
   };
+
+  useImperativeHandle(ref, () => ({
+    print: handlePrint,
+  }));
 
   const handlePrint = () => {
     const content = sheetRef.current;
@@ -87,9 +95,7 @@ export default function AttendanceTemplate({
   );
 
   return (
-    <div className="attendance-wrapper">
-
-      <div ref={sheetRef} className="attendance-sheet">
+    <div ref={sheetRef} className="attendance-sheet">
 
         {/* HEADER */}
         <div className="header">
@@ -166,4 +172,6 @@ export default function AttendanceTemplate({
       </div>
     </div>
   );
-}
+});
+
+export default AttendanceTemplate;
