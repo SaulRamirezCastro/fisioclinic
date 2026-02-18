@@ -9,7 +9,16 @@ import React from "react";
 
 /* ===================== LOG CONFIGURATION ===================== */
 
-const LOGS_ENABLED = false; // ✅ Cambia a true para habilitar logs, false para deshabilitarlos
+const LOGS_ENABLED = false;
+
+/* ===================== STATUS COLORS ===================== */
+
+const STATUS_COLORS: Record<string, string> = {
+  scheduled: "#3b82f6", // azul
+  completed: "#10b981", // verde
+  cancelled: "#ef4444", // rojo
+  no_show:   "#6b7280", // gris
+};
 
 /* ===================== TYPES ===================== */
 
@@ -18,6 +27,8 @@ type CalendarEvent = {
   title: string;
   start: string;
   end: string;
+  backgroundColor?: string;
+  borderColor?: string;
   extendedProps?: {
     status?: string;
   };
@@ -63,12 +74,10 @@ const generateHours = () => {
 
 const getTrafficLight = (count: number) => {
   if (count >= 7) return { emoji: "🔴", color: "bg-red-100 text-red-700" };
-  if (count >= 4)
-    return { emoji: "🟡", color: "bg-yellow-100 text-yellow-700" };
+  if (count >= 4) return { emoji: "🟡", color: "bg-yellow-100 text-yellow-700" };
   return { emoji: "🟢", color: "bg-emerald-100 text-emerald-700" };
 };
 
-// ✅ NUEVOS HELPERS PARA FECHAS SIN TIMEZONE
 const getLocalDateString = (date: Date | string) => {
   const d = typeof date === 'string' ? new Date(date) : date;
   const year = d.getFullYear();
@@ -84,11 +93,20 @@ const getLocalTimeString = (date: Date | string) => {
   return `${hours}:${minutes}`;
 };
 
+/* ===================== COLOR HELPER ===================== */
+
+const applyEventColors = (events: CalendarEvent[]): CalendarEvent[] =>
+  events.map((e) => ({
+    ...e,
+    backgroundColor: STATUS_COLORS[e.extendedProps?.status ?? ""] ?? "#6b7280",
+    borderColor:     STATUS_COLORS[e.extendedProps?.status ?? ""] ?? "#6b7280",
+  }));
+
 /* ===================== LOGGING SYSTEM ===================== */
 
 const logAppointmentChange = (log: AppointmentLog) => {
-  if (!LOGS_ENABLED) return; // ✅ Si los logs están deshabilitados, no hacer nada
-  
+  if (!LOGS_ENABLED) return;
+
   const formattedLog = {
     ...log,
     timestamp: new Date().toISOString(),
@@ -101,20 +119,18 @@ const logAppointmentChange = (log: AppointmentLog) => {
       second: '2-digit'
     })
   };
-  
+
   console.log('📋 [APPOINTMENT_LOG]', JSON.stringify(formattedLog, null, 2));
-  
-  // Guardar en localStorage para persistencia
+
   try {
     const logs = JSON.parse(localStorage.getItem('appointmentLogs') || '[]');
     logs.push(formattedLog);
-    // Mantener solo los últimos 100 logs
     if (logs.length > 100) logs.shift();
     localStorage.setItem('appointmentLogs', JSON.stringify(logs));
   } catch (error) {
     console.error('Error guardando logs:', error);
   }
-  
+
   return formattedLog;
 };
 
@@ -186,6 +202,31 @@ function DailyAvailabilityView({
   );
 }
 
+/* ===================== LEGEND ===================== */
+
+function CalendarLegend() {
+  return (
+    <div className="flex flex-wrap gap-3 text-sm mb-2">
+      <span className="flex items-center gap-1">
+        <span className="inline-block w-3 h-3 rounded-full bg-[#3b82f6]" />
+        Programada
+      </span>
+      <span className="flex items-center gap-1">
+        <span className="inline-block w-3 h-3 rounded-full bg-[#10b981]" />
+        Asistió
+      </span>
+      <span className="flex items-center gap-1">
+        <span className="inline-block w-3 h-3 rounded-full bg-[#ef4444]" />
+        Cancelada
+      </span>
+      <span className="flex items-center gap-1">
+        <span className="inline-block w-3 h-3 rounded-full bg-[#6b7280]" />
+        No asistió
+      </span>
+    </div>
+  );
+}
+
 /* ===================== MAIN COMPONENT ===================== */
 
 export default function AppointmentsCalendarView({
@@ -213,38 +254,31 @@ export default function AppointmentsCalendarView({
   };
 
   /* ===================== FUNCIONES PARA VER LOGS ===================== */
-  
+
   useEffect(() => {
-    if (!LOGS_ENABLED) return; // ✅ Si los logs están deshabilitados, no registrar funciones
-    
+    if (!LOGS_ENABLED) return;
+
     (window as any).viewAppointmentLogs = () => {
       const logs = JSON.parse(localStorage.getItem('appointmentLogs') || '[]');
       console.table(logs);
-      console.log('📊 Total de logs:', logs.length);
       return logs;
     };
-    
+
     (window as any).clearAppointmentLogs = () => {
       localStorage.removeItem('appointmentLogs');
       console.log('✅ Logs borrados');
     };
-    
+
     (window as any).exportAppointmentLogs = () => {
       const logs = JSON.parse(localStorage.getItem('appointmentLogs') || '[]');
       const dataStr = JSON.stringify(logs, null, 2);
-      const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+      const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
       const exportFileDefaultName = `appointment-logs-${new Date().toISOString()}.json`;
       const linkElement = document.createElement('a');
       linkElement.setAttribute('href', dataUri);
       linkElement.setAttribute('download', exportFileDefaultName);
       linkElement.click();
-      console.log('✅ Logs exportados');
     };
-    
-    console.log('💡 Funciones disponibles en consola:');
-    console.log('  - window.viewAppointmentLogs() - Ver todos los logs');
-    console.log('  - window.clearAppointmentLogs() - Limpiar logs');
-    console.log('  - window.exportAppointmentLogs() - Exportar logs a JSON');
   }, []);
 
   /* ===================== LOAD EVENTS ===================== */
@@ -258,36 +292,18 @@ export default function AppointmentsCalendarView({
           console.log('🔄 [CARGA] Iniciando carga de citas:', {
             rangoInicio: calendarRange.start,
             rangoFin: calendarRange.end,
-            timestamp: new Date().toISOString()
           });
         }
-        
+
         const data = await loadCalendarAppointments(
           calendarRange.start,
           calendarRange.end
         );
-        
-        setCalendarEvents(data);
-        
-        if (LOGS_ENABLED) {
-          console.log('✅ [CARGA] Citas cargadas exitosamente:', {
-            cantidad: data.length,
-            rangoInicio: calendarRange.start,
-            rangoFin: calendarRange.end,
-            citasPorEstado: data.reduce((acc, cita) => {
-              const status = cita.extendedProps?.status || 'sin_estado';
-              acc[status] = (acc[status] || 0) + 1;
-              return acc;
-            }, {} as Record<string, number>),
-            timestamp: new Date().toISOString()
-          });
-        }
-        
+
+        // ✅ Aplicar colores según el status
+        setCalendarEvents(applyEventColors(data));
+
       } catch (error: any) {
-        if (LOGS_ENABLED) {
-          console.error('❌ [CARGA] Error al cargar citas:', error);
-        }
-        
         logAppointmentChange({
           timestamp: new Date().toISOString(),
           action: 'LOAD_ERROR',
@@ -301,7 +317,7 @@ export default function AppointmentsCalendarView({
             success: false
           }
         });
-        
+
         showAlert("error", "Error al cargar las citas");
       }
     };
@@ -321,23 +337,12 @@ export default function AppointmentsCalendarView({
     if (!selectedEvent) return;
 
     const oldStatus = selectedEvent.extendedProps?.status;
-    
-    if (LOGS_ENABLED) {
-      console.log('🔄 [INICIO] Actualizando estado de cita:', {
-        citaId: selectedEvent.id,
-        titulo: selectedEvent.title,
-        estadoAnterior: oldStatus,
-        estadoNuevo: newStatus,
-        fecha: selectedEvent.start,
-        timestamp: new Date().toISOString()
-      });
-    }
 
     try {
       await api.patch(`/appointments/${selectedEvent.id}/`, {
         status: newStatus,
       });
-      
+
       logAppointmentChange({
         timestamp: new Date().toISOString(),
         action: 'STATUS_UPDATE',
@@ -351,20 +356,12 @@ export default function AppointmentsCalendarView({
           success: true
         }
       });
-      
+
       await refreshCalendar();
       showAlert("success", "Estado actualizado");
       setSelectedEvent(null);
-      
-      if (LOGS_ENABLED) {
-        console.log('✅ [ÉXITO] Estado actualizado correctamente');
-      }
-      
+
     } catch (error: any) {
-      if (LOGS_ENABLED) {
-        console.error('❌ [ERROR] Error al actualizar estado:', error);
-      }
-      
       logAppointmentChange({
         timestamp: new Date().toISOString(),
         action: 'UPDATE_ERROR',
@@ -378,7 +375,7 @@ export default function AppointmentsCalendarView({
           success: false
         }
       });
-      
+
       showAlert(
         "error",
         error?.response?.data?.detail ?? "Error al actualizar el estado"
@@ -412,22 +409,9 @@ export default function AppointmentsCalendarView({
   const handleEventDrop = (info: any) => {
     const localTime = getLocalTimeString(info.event.start);
     const localDate = getLocalDateString(info.event.start);
-    
+
     setSelectedTime(localTime);
-    
-    if (LOGS_ENABLED) {
-      console.log('🖱️ [DRAG] Evento arrastrado:', {
-        citaId: info.event.id,
-        titulo: info.event.title,
-        fechaNueva: localDate,
-        horaNueva: localTime,
-        eventStartRaw: info.event.start.toString(),
-        eventStartISO: info.event.start.toISOString(),
-        eventStartLocal: localDate,
-        timestamp: new Date().toISOString()
-      });
-    }
-    
+
     logAppointmentChange({
       timestamp: new Date().toISOString(),
       action: 'DRAG_START',
@@ -443,7 +427,7 @@ export default function AppointmentsCalendarView({
         }
       }
     });
-    
+
     setPendingDrop(info);
     setTimeModalOpen(true);
   };
@@ -456,26 +440,7 @@ export default function AppointmentsCalendarView({
     const oldDate = event._def.extendedProps.originalDate || getLocalDateString(pendingDrop.oldEvent.start);
     const oldTime = event._def.extendedProps.originalTime || getLocalTimeString(pendingDrop.oldEvent.start);
 
-    if (LOGS_ENABLED) {
-      console.log('🕐 [INICIO] Cambiando horario de cita:', {
-        citaId: event.id,
-        titulo: event.title,
-        fechaAnterior: oldDate,
-        horaAnterior: oldTime,
-        fechaNueva: date,
-        horaNueva: selectedTime,
-        eventStartRaw: event.start.toString(),
-        eventStartISO: event.start.toISOString(),
-        eventStartLocal: date,
-        timestamp: new Date().toISOString()
-      });
-    }
-
     if (countAppointmentsAtHour(date, selectedTime, event.id) >= 7) {
-      if (LOGS_ENABLED) {
-        console.warn('⚠️ [CAPACIDAD] No hay cupo disponible');
-      }
-      
       logAppointmentChange({
         timestamp: new Date().toISOString(),
         action: 'TIME_CHANGE',
@@ -488,11 +453,10 @@ export default function AppointmentsCalendarView({
           attemptedDate: date,
           attemptedTime: selectedTime,
           reason: 'No hay cupo disponible',
-          capacityAtHour: countAppointmentsAtHour(date, selectedTime, event.id),
           success: false
         }
       });
-      
+
       showAlert("warning", "No hay cupo disponible");
       pendingDrop.revert();
       setTimeModalOpen(false);
@@ -504,7 +468,7 @@ export default function AppointmentsCalendarView({
         date,
         start_time: selectedTime,
       });
-      
+
       logAppointmentChange({
         timestamp: new Date().toISOString(),
         action: oldDate !== date ? 'DATE_CHANGE' : 'TIME_CHANGE',
@@ -516,23 +480,14 @@ export default function AppointmentsCalendarView({
           oldTime,
           newDate: date,
           newTime: selectedTime,
-          status: event.extendedProps?.status,
           success: true
         }
       });
-      
+
       await refreshCalendar();
       showAlert("success", "Horario actualizado");
-      
-      if (LOGS_ENABLED) {
-        console.log('✅ [ÉXITO] Horario actualizado correctamente');
-      }
-      
+
     } catch (error: any) {
-      if (LOGS_ENABLED) {
-        console.error('❌ [ERROR] Error al actualizar horario:', error);
-      }
-      
       logAppointmentChange({
         timestamp: new Date().toISOString(),
         action: 'UPDATE_ERROR',
@@ -547,7 +502,7 @@ export default function AppointmentsCalendarView({
           success: false
         }
       });
-      
+
       pendingDrop.revert();
       showAlert(
         "error",
@@ -572,7 +527,8 @@ export default function AppointmentsCalendarView({
       calendarRange.start,
       calendarRange.end
     );
-    setCalendarEvents(data);
+    // ✅ Aplicar colores también al refrescar
+    setCalendarEvents(applyEventColors(data));
   };
 
   /* ===================== RENDER ===================== */
@@ -601,6 +557,9 @@ export default function AppointmentsCalendarView({
 
         {/* CALENDAR */}
         <div className="lg:col-span-2 bg-white rounded-xl shadow p-4">
+          {/* ✅ Leyenda de colores */}
+          <CalendarLegend />
+
           <FullCalendar
             plugins={[dayGridPlugin, interactionPlugin]}
             initialView="dayGridMonth"
@@ -609,27 +568,6 @@ export default function AppointmentsCalendarView({
             events={calendarEvents}
             eventDrop={handleEventDrop}
             dateClick={(info) => {
-              const citasDelDia = calendarEvents.filter(
-                e => toYYYYMMDD(new Date(e.start)) === info.dateStr
-              );
-              
-              const citasPorEstado = citasDelDia.reduce((acc, cita) => {
-                const status = cita.extendedProps?.status || 'sin_estado';
-                acc[status] = (acc[status] || 0) + 1;
-                return acc;
-              }, {} as Record<string, number>);
-              
-              if (LOGS_ENABLED) {
-                console.log('📅 [CLICK_DÍA] Usuario seleccionó fecha:', {
-                  fechaSeleccionada: info.dateStr,
-                  fechaAnterior: selectedDate,
-                  diaSemana: new Date(info.dateStr).toLocaleDateString('es-MX', { weekday: 'long' }),
-                  citasEnEseDia: citasDelDia.length,
-                  clickPosition: { x: info.jsEvent.clientX, y: info.jsEvent.clientY },
-                  timestamp: new Date().toISOString()
-                });
-              }
-              
               logAppointmentChange({
                 timestamp: new Date().toISOString(),
                 action: 'DAY_CLICK',
@@ -638,13 +576,9 @@ export default function AppointmentsCalendarView({
                 details: {
                   previousDate: selectedDate,
                   newDate: info.dateStr,
-                  dayOfWeek: new Date(info.dateStr).toLocaleDateString('es-MX', { weekday: 'long' }),
-                  totalAppointments: citasDelDia.length,
-                  appointmentsByStatus: citasPorEstado,
-                  scheduledCount: citasDelDia.filter(e => e.extendedProps?.status === 'scheduled').length
                 }
               });
-              
+
               setSelectedDate(info.dateStr);
             }}
             datesSet={(info) =>
@@ -654,17 +588,6 @@ export default function AppointmentsCalendarView({
               })
             }
             eventClick={(info) => {
-              if (LOGS_ENABLED) {
-                console.log('👆 [CLICK_EVENTO] Usuario clickeó evento:', {
-                  citaId: info.event.id,
-                  titulo: info.event.title,
-                  fecha: toYYYYMMDD(info.event.start!),
-                  hora: getLocalTimeString(info.event.start!),
-                  estado: info.event.extendedProps?.status,
-                  timestamp: new Date().toISOString()
-                });
-              }
-              
               logAppointmentChange({
                 timestamp: new Date().toISOString(),
                 action: 'EVENT_CLICK',
@@ -677,7 +600,7 @@ export default function AppointmentsCalendarView({
                   endTime: info.event.end!.toISOString()
                 }
               });
-              
+
               setSelectedDate(toYYYYMMDD(info.event.start!));
               setSelectedEvent({
                 id: info.event.id,
@@ -706,6 +629,7 @@ export default function AppointmentsCalendarView({
               <option value="scheduled">Programada</option>
               <option value="completed">Asistió</option>
               <option value="cancelled">Cancelada</option>
+              <option value="no_show">No asistió</option>
             </select>
 
             <div className="flex gap-2">
