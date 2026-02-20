@@ -1,6 +1,12 @@
 import "./attendance-template.css";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import logo from "../../assets/logo.png";
+import PizZip from "pizzip";
+import Docxtemplater from "docxtemplater";
+import { saveAs } from "file-saver";
+
+// El archivo debe estar en: frontend/public/bicatora_teplate.docx
+const TEMPLATE_URL = "/bicatora_teplate.docx";
 
 interface Props {
   patientName: string;
@@ -22,6 +28,7 @@ export default function AttendanceTemplate({
   professionalLicense = "CÉD. PROF. 3719269",
 }: Props) {
   const printRef = useRef<HTMLDivElement>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const formatDate = (date?: string | null) => {
     if (!date) return "—";
@@ -46,29 +53,102 @@ export default function AttendanceTemplate({
     firma: "",
   }));
 
-  // Inyecta estilos de impresión que solo muestran el template
+  // ── Impresión: solo muestra el template ─────────────────────────────────
   useEffect(() => {
     const styleId = "attendance-print-style";
     if (document.getElementById(styleId)) return;
-
     const style = document.createElement("style");
     style.id = styleId;
     style.innerHTML = `
       @media print {
         body > * { display: none !important; }
         #attendance-print-root { display: block !important; }
-        #attendance-print-root * { display: revert !important; }
       }
     `;
     document.head.appendChild(style);
-
-    return () => {
-      document.getElementById(styleId)?.remove();
-    };
+    return () => { document.getElementById(styleId)?.remove(); };
   }, []);
+
+  // ── Descarga DOCX ────────────────────────────────────────────────────────
+  const handleDownloadDocx = async () => {
+    setIsGenerating(true);
+    try {
+      // 1. Cargar el template como binario
+      const response = await fetch(TEMPLATE_URL);
+      if (!response.ok) {
+        throw new Error(
+          `No se pudo cargar el template (${response.status}). ` +
+          `Asegúrate de que el archivo está en /public/bicatora_teplate.docx`
+        );
+      }
+
+      const arrayBuffer = await response.arrayBuffer();
+
+      // 2. Inicializar PizZip + Docxtemplater
+      const zip = new PizZip(arrayBuffer);
+      const doc = new Docxtemplater(zip, {
+        paragraphLoop: true, // necesario para que el loop {#sesiones} repita filas
+        linebreaks: true,
+      });
+
+      // 3. Renderizar con los datos — doc.render() reemplaza setData()+render()
+      doc.render({
+        paciente:          patientName,
+        fechaReporte,
+        periodoInicio:     formatDate(periodStart),
+        periodoFin:        formatDate(periodEnd),
+        sesiones,          // array → loop {#sesiones}...{/sesiones}
+        nombreMedico:      professionalName,
+        cedulaProfesional: professionalLicense,
+        firmaMedico:       "",
+      });
+
+      // 4. Generar blob y descargar
+      const blob = doc.getZip().generate({
+        type: "blob",
+        mimeType:
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      });
+
+      saveAs(blob, `Asistencias_${patientName.replace(/\s+/g, "_")}.docx`);
+
+    } catch (error: any) {
+      // Muestra el error detallado de docxtemplater si está disponible
+      if (error.properties?.errors?.length) {
+        const details = error.properties.errors
+          .map((e: any) => `• ${e.properties?.explanation ?? e.message}`)
+          .join("\n");
+        console.error("Errores en el template:\n" + details);
+        alert("Error en el template:\n" + details);
+      } else {
+        console.error("Error al generar el DOCX:", error);
+        alert(`Error: ${error.message}`);
+      }
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handlePrint = () => window.print();
 
   return (
     <div id="attendance-print-root" className="attendance-wrapper">
+
+      {/* ── Botones ── */}
+      <div className="action-buttons no-print">
+        <button onClick={handlePrint} className="btn-print">
+          🖨️ Imprimir
+        </button>
+        <button
+          onClick={handleDownloadDocx}
+          disabled={isGenerating}
+          className="btn-download"
+        >
+          {isGenerating ? "Generando..." : "⬇️ Descargar Word (.docx)"}
+        </button>
+      </div>
+
+      {/* ── Vista previa ── */}
       <div ref={printRef} className="attendance-sheet">
 
         {/* HEADER */}
@@ -76,24 +156,23 @@ export default function AttendanceTemplate({
           <div className="header-logo">
             <img src={logo} alt="Logo Fisioclinic" />
           </div>
+          <div className="header-text">
+            <div className="header-title">FISIOCLINIC</div>
+            <div className="header-subtitle">
+              Centro de Terapia Física y Rehabilitación
+            </div>
+            <div className="document-title">RELACIÓN DE ASISTENCIAS</div>
+            <div className="document-period">
+              <strong>PERIODO DE ASISTENCIA:</strong>
+              <br />
+              {formatDate(periodStart)} AL {formatDate(periodEnd)}
+            </div>
+          </div>
         </div>
 
-        {/* DATOS DEL REPORTE */}
-        <div className="report-meta">
-          <div className="report-meta-row">
-            <span className="label">Paciente:</span>
-            <span className="value">{patientName}</span>
-          </div>
-          <div className="report-meta-row">
-            <span className="label">Fecha del reporte:</span>
-            <span className="value">{fechaReporte}</span>
-          </div>
-          <div className="report-meta-row">
-            <span className="label">Periodo de asistencias:</span>
-            <span className="value">
-              {formatDate(periodStart)} al {formatDate(periodEnd)}
-            </span>
-          </div>
+        {/* PACIENTE */}
+        <div className="patient-line">
+          <strong>PACIENTE:</strong> {patientName}
         </div>
 
         {/* TABLA DE SESIONES */}
@@ -128,24 +207,19 @@ export default function AttendanceTemplate({
         </div>
 
         {/* FIRMA DEL MÉDICO */}
-        <div className="doctor-signature">
-          <div className="signature-line"></div>
-          <div className="doctor-name">{professionalName}</div>
-          <div className="doctor-license">{professionalLicense}</div>
-        </div>
-
-        {/* FOOTER */}
         <div className="footer-section">
+          <div className="footer-attention">ATENTAMENTE</div>
+          <div className="footer-professional">{professionalName}</div>
+          <div className="footer-license">{professionalLicense}</div>
           <div className="footer-social">
-            <span>Fisioclinic_ver</span>
-            <span>www.fisioclinic.com.mx</span>
-            <span>Fisioclinic s.c.</span>
+            <div>Fisioclinic_ver</div>
+            <div>www.fisioclinic.com.mx</div>
+            <div>Fisioclinic s.c.</div>
           </div>
           <div className="footer-bar">
             Bernal Díaz del Castillo #160 entre Paseo de las Flores y S.S. Juan
-            Pablo II, Fracc. Virginia, Boca del Río, Ver.{" "}
-            <strong>Teléfono</strong> (2299 27 3730){" "}
-            <strong>Móvil</strong> (2291 21 0390)
+            Pablo II, Fracc. Virginia, Boca del Río, Ver. Teléfono (2299 27
+            3730) Móvil (2291 21 0390)
           </div>
         </div>
 
