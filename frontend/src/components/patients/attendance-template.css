@@ -1,93 +1,276 @@
-/* ── Wrapper ─────────────────────────────────────────────────────────────── */
-.attendance-wrapper {
-  font-family: "Aptos", "Calibri", sans-serif;
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 1rem;
+/* =====================================================
+   CONFIGURACIÓN GLOBAL
+===================================================== */
+
+* {
+  box-sizing: border-box;
 }
 
-/* ── Botones ─────────────────────────────────────────────────────────────── */
-.action-buttons {
+body {
+  margin: 0;
+  padding: 0;
+  background: #e5e5e5;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #000;
+}
+
+/* =====================================================
+   CONTENEDOR PRINCIPAL - HOJA CARTA
+===================================================== */
+
+.attendance-sheet {
+  width: 216mm;
+  height: 279mm; /* 🔥 Cambiado de min-height */
+
+  margin: 30px auto;
+  padding: 20mm 20mm 20mm 30mm;
+
+  background: white;
+
+  border-radius: 4px;
+  border: 1px solid #cfcfcf;
+
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.15);
+
+  overflow: hidden; /* 🔥 Evita que se cree otra hoja */
+}
+
+/* =====================================================
+   HEADER
+===================================================== */
+
+.header {
+  display: grid;
+  grid-template-columns: 180px 1fr 180px;
+  align-items: center;
+
+  border-bottom: 2px solid black;
+  padding-bottom: 12px;
+  margin-bottom: 18px;
+}
+
+.header-logo {
   display: flex;
-  gap: 0.75rem;
-  margin-bottom: 1.25rem;
+  justify-content: flex-start;
 }
 
-.btn-print,
-.btn-download {
-  padding: 0.5rem 1.25rem;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  cursor: pointer;
-  font-weight: 600;
-  transition: opacity 0.2s;
+.header-logo img {
+  max-width: 160px;
+  height: auto;
+  object-fit: contain;
 }
 
-.btn-print                         { background: #e5e7eb; color: #374151; }
-.btn-download                      { background: #0c443e; color: #ffffff; }
-.btn-print:disabled,
-.btn-download:disabled             { opacity: 0.5; cursor: not-allowed; }
-.btn-print:hover:not(:disabled)    { opacity: 0.8; }
-.btn-download:hover:not(:disabled) { opacity: 0.85; }
+.header-spacer {
+  width: 180px;
+}
 
-/* ── Loading ─────────────────────────────────────────────────────────────── */
-.preview-loading {
+.header-text {
+  flex: 1;
+  text-align: center;
+}
+
+.header-title {
+  font-size: 20px;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.header-subtitle {
+  font-size: 13px;
+  margin-top: 3px;
+}
+
+.document-title {
+  font-size: 16px;
+  font-weight: bold;
+  margin-top: 8px;
+}
+
+.document-month {
+  font-size: 13px;
+  margin-top: 3px;
+}
+
+.document-period {
+  font-size: 13px;
+  margin-top: 6px;
+  font-weight: bold;
+}
+
+/* =====================================================
+   PACIENTE
+===================================================== */
+
+.patient-line {
+  margin-top: 15px;
+  font-size: 13px;
+}
+
+/* =====================================================
+   LISTA DE ASISTENCIAS
+===================================================== */
+
+.attendance-list-container {
+  margin-top: 20px;
+}
+
+.attendance-list-title {
+  font-weight: bold;
+  border-bottom: 1px solid black;
+  padding-bottom: 4px;
+  margin-bottom: 10px;
+  font-size: 13px;
+}
+
+.attendance-list {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  gap: 6px;
+}
+
+.attendance-item {
+  border-bottom: 1px dotted black;
+  padding: 4px 0;
+  font-size: 13px;
+
+  page-break-inside: avoid;
+}
+
+/* =====================================================
+   OBSERVACIONES
+===================================================== */
+
+.notes-section {
+  margin-top: 30px;
+  page-break-inside: avoid;
+}
+
+.notes-title {
+  font-weight: bold;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+.notes-box {
+  border: 1px solid black;
+  min-height: 80px;
+  padding: 8px;
+  white-space: pre-line;
+  font-size: 13px;
+}
+
+/* =====================================================
+   FIRMA
+===================================================== */
+
+.footer-section {
+  margin-top: 50px;
+  text-align: center;
+  page-break-inside: avoid;
+}
+
+.footer-attention {
+  letter-spacing: 4px;
+  margin-bottom: 40px;
+  font-weight: 500;
+}
+
+.footer-professional {
+  margin-top: 30px;
+  font-size: 14px;
+}
+
+.footer-license {
+  font-weight: bold;
+  margin-top: 5px;
+  font-size: 13px;
+}
+
+.footer-bar {
+  margin-top: 20px;
+  background: #2f4f4f;
+  color: white;
+  padding: 8px 12px;
+  font-size: 12px;
+}
+
+.footer-social {
+  margin-top: 20px;
+  display: flex;
   justify-content: center;
-  gap: 1rem;
-  padding: 4rem;
-  color: #6b7280;
-  font-size: 0.9rem;
-  background: #f3f4f6;
-  border-radius: 6px;
-  min-height: 300px;
+  gap: 40px;
+  font-size: 13px;
 }
 
-.spinner {
-  width: 36px;
-  height: 36px;
-  border: 3px solid #d1d5db;
-  border-top-color: #0c443e;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+/* =====================================================
+   EDITOR DE OBSERVACIONES (NO SE IMPRIME)
+===================================================== */
+
+.notes-editor {
+  width: 216mm;
+  margin: 20px auto;
 }
 
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* ── Contenedor docx-preview ─────────────────────────────────────────────── */
-.docx-preview-container {
-  background: #f3f4f6;
-  padding: 1.5rem;
-  border-radius: 6px;
+.notes-editor textarea {
+  width: 100%;
+  padding: 8px;
+  resize: vertical;
 }
 
-/* docx-preview inyecta elementos con clase .docx-preview-content */
-.docx-preview-content section.docx {
-  background: #ffffff;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  border-radius: 4px;
-  margin: 0 auto;
-  padding: 2cm !important;
-  min-height: 600px;
+/* =====================================================
+   CONFIGURACIÓN DE IMPRESIÓN
+===================================================== */
+
+@page {
+  size: letter;
+  margin: 0;
 }
 
-/* ── Print ───────────────────────────────────────────────────────────────── */
 @media print {
-  .no-print { display: none !important; }
 
-  body > * { display: none !important; }
-  #attendance-print-root { display: block !important; padding: 0; }
-
-  .docx-preview-container {
-    background: none !important;
-    padding: 0 !important;
+  html, body {
+    width: 216mm;
+    height: 279mm;
+    margin: 0;
+    padding: 0;
+    background: white;
   }
 
-  .docx-preview-content section.docx {
-    box-shadow: none !important;
-    padding: 0 !important;
+  body * {
+    visibility: hidden;
+  }
+
+  .attendance-sheet,
+  .attendance-sheet * {
+    visibility: visible;
+  }
+
+  .attendance-sheet {
+    position: absolute;
+    top: 0;
+    left: 0;
+
+    width: 216mm;
+    height: 279mm; /* 🔥 Corregido */
+
+    margin: 0;
+    padding: 20mm 20mm 20mm 30mm;
+
+    border: none;
+    box-shadow: none;
+    background: white;
+
+    overflow: hidden;
+  }
+
+  .notes-editor,
+  button {
+    display: none !important;
   }
 }
+
+/* =====================================================
+   CONTROL DE SALTO DE PÁGINA
+===================================================== */
+
+/* 🔥 Eliminado page-break-after: always */
