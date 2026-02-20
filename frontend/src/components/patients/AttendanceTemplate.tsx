@@ -121,13 +121,7 @@ export default function AttendanceTemplate({
           <div className="header-logo">
             <img src={logo} alt="Logo Fisioclinic" />
           </div>
-          <div className="header-text">
-            <div className="header-title">FISIOCLINIC</div>
-            <div className="header-subtitle">
-              Centro de Terapia Física y Rehabilitación
-            </div>
-            <div className="document-title">RELACIÓN DE ASISTENCIAS</div>
-          </div>
+
         </div>
 
         {/* DATOS DEL REPORTE */}
