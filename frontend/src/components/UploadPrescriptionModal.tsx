@@ -119,7 +119,7 @@ export default function UploadPrescriptionModal({
     } catch (err) {
       console.error("❌ Error al comprimir imagen:", err);
       dispatch({ type: "ERROR", v
-          alue: "No se pudo comprimir la imagen. Intenta con otro archivo." });
+          value: "No se pudo comprimir la imagen. Intenta con otro archivo." });
       dispatch({ type: "COMPRESSING",
           value: false });
     }
