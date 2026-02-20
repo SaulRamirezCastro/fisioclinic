@@ -166,7 +166,7 @@ export default function AttendanceTemplate({
       <div className="action-buttons no-print">
         <button
           onClick={handleDownload}
-          disabled={isGenerating}
+          disabled={isDownloading || isLoading}
           className="btn-download"
         >
           {isGenerating ? "Generando..." : "⬇️ Descargar Word (.docx)"}
