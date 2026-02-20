@@ -1,15 +1,6 @@
 import "./attendance-template.css";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import logo from "../../assets/logo.png";
-import PizZip from "pizzip";
-import Docxtemplater from "docxtemplater";
-import { saveAs } from "file-saver";
-
-// Vite: coloca el .docx en src/assets/ e impórtalo así
-// CRA:  pon el .docx en /public/ y usa: const templateUrl = "/FISIOCLINIC_sesiones_template.docx";
-//import templateUrl from "../../assets/bicatora_teplate.docx?url";
-
-const TEMPLATE_URL = "/bicatora_teplate.docx";
 
 interface Props {
   patientName: string;
@@ -31,7 +22,6 @@ export default function AttendanceTemplate({
   professionalLicense = "CÉD. PROF. 3719269",
 }: Props) {
   const printRef = useRef<HTMLDivElement>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
 
   const formatDate = (date?: string | null) => {
     if (!date) return "—";
@@ -56,66 +46,29 @@ export default function AttendanceTemplate({
     firma: "",
   }));
 
-  // ── Descarga DOCX desde template ────────────────────────────────────────
-  const handleDownloadDocx = async () => {
-    setIsGenerating(true);
-    try {
-      const response = await fetch(TEMPLATE_URL);
-      if (!response.ok) throw new Error("No se pudo cargar el template .docx");
-      const arrayBuffer = await response.arrayBuffer();
+  // Inyecta estilos de impresión que solo muestran el template
+  useEffect(() => {
+    const styleId = "attendance-print-style";
+    if (document.getElementById(styleId)) return;
 
-      const zip = new PizZip(arrayBuffer);
-      const doc = new Docxtemplater(zip, {
-        paragraphLoop: true,
-        linebreaks: true,
-      });
+    const style = document.createElement("style");
+    style.id = styleId;
+    style.innerHTML = `
+      @media print {
+        body > * { display: none !important; }
+        #attendance-print-root { display: block !important; }
+        #attendance-print-root * { display: revert !important; }
+      }
+    `;
+    document.head.appendChild(style);
 
-      doc.render({
-        paciente: patientName,
-        fechaReporte,
-        periodoInicio: formatDate(periodStart),
-        periodoFin: formatDate(periodEnd),
-        sesiones,
-        nombreMedico: professionalName,
-        cedulaProfesional: professionalLicense,
-        firmaMedico: "",
-      });
-
-      const blob = doc.getZip().generate({
-        type: "blob",
-        mimeType:
-          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      });
-
-      saveAs(blob, `Asistencias_${patientName.replace(/\s+/g, "_")}.docx`);
-    } catch (error) {
-      console.error("Error al generar el DOCX:", error);
-      alert("Ocurrió un error al generar el documento. Revisa la consola.");
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  const handlePrint = () => window.print();
+    return () => {
+      document.getElementById(styleId)?.remove();
+    };
+  }, []);
 
   return (
-    <div className="attendance-wrapper">
-
-      {/* ── Botones ── */}
-      <div className="action-buttons no-print">
-        <button onClick={handlePrint} className="btn-print">
-          🖨️ Imprimir
-        </button>
-        <button
-          onClick={handleDownloadDocx}
-          disabled={isGenerating}
-          className="btn-download"
-        >
-          {isGenerating ? "Generando..." : "⬇️ Descargar Word (.docx)"}
-        </button>
-      </div>
-
-      {/* ── Vista previa ── */}
+    <div id="attendance-print-root" className="attendance-wrapper">
       <div ref={printRef} className="attendance-sheet">
 
         {/* HEADER */}
@@ -123,7 +76,6 @@ export default function AttendanceTemplate({
           <div className="header-logo">
             <img src={logo} alt="Logo Fisioclinic" />
           </div>
-
         </div>
 
         {/* DATOS DEL REPORTE */}
