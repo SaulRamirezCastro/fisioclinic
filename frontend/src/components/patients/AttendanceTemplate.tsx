@@ -3,9 +3,8 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import PizZip from "pizzip";
 import Docxtemplater from "docxtemplater";
 import { saveAs } from "file-saver";
-import mammoth from "mammoth";
+import { renderAsync } from "docx-preview";
 
-// El archivo debe estar en: frontend/public/bicatora_teplate.docx
 const TEMPLATE_URL = "/bitacora_template.docx";
 
 interface Props {
@@ -27,8 +26,8 @@ export default function AttendanceTemplate({
   professionalName = "Lic. T.F. Salvador Antonio Pomar Castañeda",
   professionalLicense = "CÉD. PROF. 3719269",
 }: Props) {
-  const [previewHtml, setPreviewHtml] = useState<string>("");
-  const [isLoading, setIsLoading]     = useState(true);
+  const previewRef  = useRef<HTMLDivElement>(null);
+  const [isLoading, setIsLoading]         = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
 
   const formatDate = (date?: string | null) => {
@@ -41,7 +40,7 @@ export default function AttendanceTemplate({
     });
   };
 
-  const today = new Date().toISOString().split("T")[0];
+  const today       = new Date().toISOString().split("T")[0];
   const fechaReporte = formatDate(reportDate ?? today);
 
   const sortedDates = [...attendedDates].sort(
@@ -50,11 +49,11 @@ export default function AttendanceTemplate({
 
   const sesiones = sortedDates.map((date, index) => ({
     numeroSesion: index + 1,
-    fechaSesion: formatDate(date),
-    firma: "",
+    fechaSesion:  formatDate(date),
+    firma:        "",
   }));
 
-  // ── Construye el blob del .docx con los datos inyectados ─────────────────
+  // ── Genera el blob del .docx con datos inyectados ────────────────────────
   const buildDocxBlob = useCallback(async (): Promise<Blob> => {
     const response = await fetch(TEMPLATE_URL);
     if (!response.ok) {
@@ -66,14 +65,11 @@ export default function AttendanceTemplate({
 
     const arrayBuffer = await response.arrayBuffer();
     const zip = new PizZip(arrayBuffer);
-    const doc = new Docxtemplater(zip, {
-      paragraphLoop: true,
-      linebreaks: true,
-    });
+    const doc = new Docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
 
     doc.render({
       paciente:          patientName,
-      fechaReporte,
+      fecha: fechaReporte,
       periodoInicio:     formatDate(periodStart),
       periodoFin:        formatDate(periodEnd),
       sesiones,
@@ -90,27 +86,31 @@ export default function AttendanceTemplate({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patientName, periodStart, periodEnd, reportDate, attendedDates, professionalName, professionalLicense]);
 
-  // ── Regenera la vista previa con mammoth cuando cambian los props ─────────
+  // ── Renderiza la vista previa con docx-preview ───────────────────────────
   useEffect(() => {
     let cancelled = false;
     setIsLoading(true);
 
     buildDocxBlob()
-      .then((blob) => blob.arrayBuffer())
-      .then((buffer) =>
-        mammoth.convertToHtml({ arrayBuffer: buffer }, {
-          styleMap: [
-            "p[style-name='heading 1'] => h1:fresh",
-            "p[style-name='heading 2'] => h2:fresh",
-          ],
-        })
-      )
-      .then(({ value }) => {
-        if (!cancelled) setPreviewHtml(value);
+      .then(async (blob) => {
+        if (cancelled || !previewRef.current) return;
+        // Limpia el contenedor antes de renderizar
+        previewRef.current.innerHTML = "";
+        await renderAsync(blob, previewRef.current, undefined, {
+          className: "docx-preview-content",
+          inWrapper: false,       // sin wrapper extra
+          ignoreWidth: true,      // ocupa el ancho del contenedor
+          ignoreHeight: false,
+          renderHeaders: true,
+          renderFooters: true,
+          renderFootnotes: true,
+          useBase64URL: true,     // imágenes como base64
+        });
       })
       .catch((err: Error) => {
-        if (!cancelled)
-          setPreviewHtml(`<p style="color:red">⚠️ ${err.message}</p>`);
+        if (!cancelled && previewRef.current) {
+          previewRef.current.innerHTML = `<p style="color:red">⚠️ ${err.message}</p>`;
+        }
       })
       .finally(() => {
         if (!cancelled) setIsLoading(false);
@@ -130,15 +130,7 @@ export default function AttendanceTemplate({
         body > * { display: none !important; }
         #attendance-print-root { display: block !important; }
         #attendance-print-root .no-print { display: none !important; }
-        #attendance-print-root .docx-preview {
-          background: none !important;
-          padding: 0 !important;
-        }
-        #attendance-print-root .docx-content {
-          box-shadow: none !important;
-          border: none !important;
-          padding: 0 !important;
-        }
+        #attendance-print-root .docx-wrapper { padding: 0 !important; background: none !important; }
       }
     `;
     document.head.appendChild(style);
@@ -156,10 +148,8 @@ export default function AttendanceTemplate({
         const details = error.properties.errors
           .map((e: any) => `• ${e.properties?.explanation ?? e.message}`)
           .join("\n");
-        console.error("Errores en el template:\n" + details);
         alert("Error en el template:\n" + details);
       } else {
-        console.error("Error al descargar:", error);
         alert(`Error: ${error.message}`);
       }
     } finally {
@@ -186,20 +176,20 @@ export default function AttendanceTemplate({
         </button>
       </div>
 
-      {/* ── Vista previa del documento renderizado por mammoth ── */}
-      <div className="docx-preview">
-        {isLoading ? (
-          <div className="preview-loading">
-            <div className="spinner" />
-            <span>Generando vista previa...</span>
-          </div>
-        ) : (
-          <div
-            className="docx-content"
-            dangerouslySetInnerHTML={{ __html: previewHtml }}
-          />
-        )}
-      </div>
+      {/* ── Spinner mientras carga ── */}
+      {isLoading && (
+        <div className="preview-loading no-print">
+          <div className="spinner" />
+          <span>Generando vista previa...</span>
+        </div>
+      )}
+
+      {/* ── Contenedor donde docx-preview inyecta el documento ── */}
+      <div
+        ref={previewRef}
+        className="docx-preview-container"
+        style={{ display: isLoading ? "none" : "block" }}
+      />
 
     </div>
   );
