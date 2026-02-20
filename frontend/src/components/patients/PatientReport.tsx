@@ -148,16 +148,12 @@ export default function PatientReport({ patient }: Props) {
           {attendedDates.length === 0 ? (
             <EmptyState />
           ) : (
-            <>
               <AttendanceTemplate
                 patientName={patient.full_name}
                 periodStart={start}
                 periodEnd={end}
                 attendedDates={attendedDates}
               />
-
-              <PrintButton />
-            </>
           )}
         </>
       )}
@@ -330,18 +326,18 @@ function EmptyState() {
   );
 }
 
-function PrintButton() {
-  return (
-    <div className="text-right mt-4">
-      <button
-        onClick={() => window.print()}
-        className="bg-slate-700 text-white px-4 py-2 rounded-lg"
-      >
-        Imprimir
-      </button>
-    </div>
-  );
-}
+// function PrintButton() {
+//   return (
+//     <div className="text-right mt-4">
+//       <button
+//         onClick={() => window.print()}
+//         className="bg-slate-700 text-white px-4 py-2 rounded-lg"
+//       >
+//         Imprimir
+//       </button>
+//     </div>
+//   );
+// }
 
 function Stat({ label, value }: any) {
   return (
