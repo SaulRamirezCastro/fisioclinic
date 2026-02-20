@@ -7,7 +7,9 @@ import { saveAs } from "file-saver";
 
 // Vite: coloca el .docx en src/assets/ e impórtalo así
 // CRA:  pon el .docx en /public/ y usa: const templateUrl = "/FISIOCLINIC_sesiones_template.docx";
-import templateUrl from "../../assets/bicatora_teplate.docx?url";
+//import templateUrl from "../../assets/bicatora_teplate.docx?url";
+
+const TEMPLATE_URL = "/bicatora_teplate.docx";
 
 interface Props {
   patientName: string;
@@ -58,7 +60,7 @@ export default function AttendanceTemplate({
   const handleDownloadDocx = async () => {
     setIsGenerating(true);
     try {
-      const response = await fetch(templateUrl);
+      const response = await fetch(TEMPLATE_URL);
       if (!response.ok) throw new Error("No se pudo cargar el template .docx");
       const arrayBuffer = await response.arrayBuffer();
 
