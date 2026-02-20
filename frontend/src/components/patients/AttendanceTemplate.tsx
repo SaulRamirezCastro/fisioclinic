@@ -165,7 +165,7 @@ export default function AttendanceTemplate({
       {/* ── Botones ── */}
       <div className="action-buttons no-print">
         <button
-          onClick={handleDownloadDocx}
+          onClick={handleDownload}
           disabled={isGenerating}
           className="btn-download"
         >
