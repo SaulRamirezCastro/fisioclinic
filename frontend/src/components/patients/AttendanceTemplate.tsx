@@ -111,7 +111,7 @@ export default function AttendanceTemplate({
 
       doc.render({
         paciente: patientName,
-        fechaReporte,
+        fecha: fechaReporte,
         periodoInicio: formatDate(periodStart),
         periodoFin: formatDate(periodEnd),
         sesiones,
