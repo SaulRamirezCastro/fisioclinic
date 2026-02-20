@@ -7,7 +7,7 @@ import { saveAs } from "file-saver";
 
 // Vite: coloca el .docx en src/assets/ e impórtalo así
 // CRA:  pon el .docx en /public/ y usa: const templateUrl = "/FISIOCLINIC_sesiones_template.docx";
-import templateUrl from "../../assets/FISIOCLINIC_sesiones_template.docx?url";
+import templateUrl from "../../assets/bicatora_teplate.docx?url";
 
 interface Props {
   patientName: string;
