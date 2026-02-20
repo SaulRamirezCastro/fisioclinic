@@ -169,7 +169,7 @@ export default function AttendanceTemplate({
           disabled={isDownloading || isLoading}
           className="btn-download"
         >
-          {isGenerating ? "Generando..." : "⬇️ Descargar Word (.docx)"}
+          {isDownloading ? "Generando..." : "⬇️ Descargar Word (.docx)"}
         </button>
       </div>
 
