@@ -1,4 +1,4 @@
-/* ── Wrapper ────────────────────────────────────────────────────────────── */
+/* ── Wrapper ─────────────────────────────────────────────────────────────── */
 .attendance-wrapper {
   font-family: "Aptos", "Calibri", sans-serif;
   max-width: 860px;
@@ -6,7 +6,7 @@
   padding: 1rem;
 }
 
-/* ── Botones ────────────────────────────────────────────────────────────── */
+/* ── Botones ─────────────────────────────────────────────────────────────── */
 .action-buttons {
   display: flex;
   gap: 0.75rem;
@@ -24,14 +24,14 @@
   transition: opacity 0.2s;
 }
 
-.btn-print               { background: #e5e7eb; color: #374151; }
-.btn-download            { background: #0c443e; color: #ffffff; }
+.btn-print                          { background: #e5e7eb; color: #374151; }
+.btn-download                       { background: #0c443e; color: #ffffff; }
 .btn-print:disabled,
-.btn-download:disabled   { opacity: 0.5; cursor: not-allowed; }
-.btn-print:hover:not(:disabled)    { opacity: 0.8; }
-.btn-download:hover:not(:disabled) { opacity: 0.85; }
+.btn-download:disabled              { opacity: 0.5; cursor: not-allowed; }
+.btn-print:hover:not(:disabled)     { opacity: 0.8; }
+.btn-download:hover:not(:disabled)  { opacity: 0.85; }
 
-/* ── Contenedor de la vista previa ─────────────────────────────────────── */
+/* ── Contenedor gris de la preview ──────────────────────────────────────── */
 .docx-preview {
   background: #f3f4f6;
   padding: 1.5rem;
@@ -39,7 +39,7 @@
   min-height: 400px;
 }
 
-/* ── Loading ────────────────────────────────────────────────────────────── */
+/* ── Loading ─────────────────────────────────────────────────────────────── */
 .preview-loading {
   display: flex;
   flex-direction: column;
@@ -60,11 +60,9 @@
   animation: spin 0.8s linear infinite;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
+@keyframes spin { to { transform: rotate(360deg); } }
 
-/* ── Documento renderizado por mammoth ─────────────────────────────────── */
+/* ── Documento renderizado por mammoth ───────────────────────────────────── */
 .docx-content {
   background: #ffffff;
   padding: 3rem 3.5rem;
@@ -77,7 +75,6 @@
   min-height: 600px;
 }
 
-/* Tipografía del documento */
 .docx-content h1 {
   font-size: 16pt;
   font-weight: 700;
@@ -92,11 +89,9 @@
   margin: 1rem 0 0.4rem;
 }
 
-.docx-content p {
-  margin: 0.25rem 0;
-}
+.docx-content p { margin: 0.25rem 0; }
 
-/* Tabla de sesiones */
+/* Tabla generada por mammoth */
 .docx-content table {
   width: 100%;
   border-collapse: collapse;
@@ -107,16 +102,18 @@
 .docx-content table thead tr {
   background-color: #0c443e;
   color: #ffffff;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
 
 .docx-content table th {
-  padding: 0.45rem 0.75rem;
+  padding: 0.5rem 0.75rem;
   text-align: center;
   font-weight: 600;
 }
 
 .docx-content table td {
-  padding: 0.45rem 0.75rem;
+  padding: 0.5rem 0.75rem;
   border: 1px solid #d1d5db;
   text-align: center;
 }
@@ -125,62 +122,31 @@
   background-color: #f9fafb;
 }
 
-/* ── Versión solo para impresión ────────────────────────────────────────── */
-.print-only { display: none; }
-
-/* ── Print ──────────────────────────────────────────────────────────────── */
+/* ── Print ───────────────────────────────────────────────────────────────── */
 @media print {
-  .no-print  { display: none !important; }
-  .print-only {
-    display: block;
-  }
+  .no-print { display: none !important; }
 
-  .attendance-wrapper { padding: 0; max-width: 100%; }
-
-  .docx-content {
-    box-shadow: none;
-    padding: 0;
-    border-radius: 0;
-  }
-}
-
-/* ── Print: solo muestra el template, oculta todo lo demás ─────────────── */
-@media print {
-  /* Oculta toda la página */
-  body > * {
-    display: none !important;
-  }
-
-  /* Muestra solo el root del template */
   #attendance-print-root {
     display: block !important;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    margin: 0;
     padding: 0;
+    max-width: 100%;
   }
 
-  /* Resetea sombras y bordes para impresión limpia */
-  #attendance-print-root .attendance-sheet {
+  .docx-preview {
+    background: none !important;
+    padding: 0 !important;
+  }
+
+  .docx-content {
     box-shadow: none !important;
     border: none !important;
-    padding: 1cm !important;
+    padding: 0 !important;
   }
 
-  /* Fuerza colores de fondo en impresión */
-  #attendance-print-root .sessions-table thead tr {
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+  .docx-content table thead tr {
     background-color: #0c443e !important;
     color: #ffffff !important;
-  }
-
-  #attendance-print-root .footer-bar {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
-    background-color: #0c443e !important;
-    color: #ffffff !important;
   }
 }
