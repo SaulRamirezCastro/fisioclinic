@@ -33,6 +33,10 @@ export default function PatientPrescriptionsList({
   const [confirmDeleteTarget, setConfirmDeleteTarget] =
     useState<any | null>(null);
 
+  const [expandedNotes, setExpandedNotes] = useState<Set<number>>(
+    new Set()
+  );
+
   /* ---------------- SYNC PROPS ---------------- */
 
   useEffect(() => {
@@ -53,6 +57,16 @@ export default function PatientPrescriptionsList({
     );
   }
 
+  /* ---------------- HELPERS ---------------- */
+
+  const toggleNotes = (id: number) => {
+    setExpandedNotes((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
   /* ---------------- API DELETE ---------------- */
 
   const deletePatientPrescription = async (prescriptionId: number) => {
@@ -71,19 +85,15 @@ export default function PatientPrescriptionsList({
 
       await deletePatientPrescription(confirmDeleteTarget.id);
 
-      /* 🔥 ACTUALIZAR LISTA LOCAL */
       setLocalPrescriptions((prev) =>
         prev.filter((p) => p.id !== confirmDeleteTarget.id)
       );
 
-      /* cerrar preview si aplica */
       if (previewPrescription?.id === confirmDeleteTarget.id) {
         setPreviewPrescription(null);
       }
 
-      /* notificar padre */
       onDeleted?.(confirmDeleteTarget.id);
-
     } catch (error) {
       console.error("Error al borrar receta", error);
       alert("No se pudo borrar la receta");
@@ -102,35 +112,58 @@ export default function PatientPrescriptionsList({
         {items.map((r) => (
           <div
             key={r.id}
-            className="flex justify-between items-center border rounded-lg p-3"
+            className="border rounded-lg overflow-hidden"
           >
-            <div>
-              <p className="font-medium text-slate-800">
-                {r.description || "Receta médica"}
-              </p>
+            {/* Fila principal */}
+            <div className="flex justify-between items-center p-3">
+              <div>
+                <p className="font-medium text-slate-800">
+                  {r.description || "Receta médica"}
+                </p>
 
-              <p className="text-xs text-slate-500">
-                {new Date(r.created_at).toLocaleDateString("es-MX")}
-              </p>
+                <p className="text-xs text-slate-500">
+                  {new Date(r.created_at).toLocaleDateString("es-MX")}
+                </p>
+              </div>
+
+              <div className="flex gap-2">
+                {/* NOTAS — solo si existen */}
+                {r.notes && (
+                  <Button
+                    variant="secondary"
+                    onClick={() => toggleNotes(r.id)}
+                  >
+                    {expandedNotes.has(r.id) ? "Ocultar notas" : "Ver notas"}
+                  </Button>
+                )}
+
+                <Button
+                  variant="secondary"
+                  onClick={() => setPreviewPrescription(r)}
+                  disabled={deletingId === r.id}
+                >
+                  Ver archivo
+                </Button>
+
+                <Button
+                  variant="danger"
+                  onClick={() => setConfirmDeleteTarget(r)}
+                  disabled={deletingId === r.id}
+                >
+                  {deletingId === r.id ? "Borrando…" : "🗑 Borrar"}
+                </Button>
+              </div>
             </div>
 
-            <div className="flex gap-2">
-              <Button
-                variant="secondary"
-                onClick={() => setPreviewPrescription(r)}
-                disabled={deletingId === r.id}
-              >
-                Ver archivo
-              </Button>
-
-              <Button
-                variant="danger"
-                onClick={() => setConfirmDeleteTarget(r)}
-                disabled={deletingId === r.id}
-              >
-                {deletingId === r.id ? "Borrando…" : "🗑 Borrar"}
-              </Button>
-            </div>
+            {/* Panel de notas expandible */}
+            {r.notes && expandedNotes.has(r.id) && (
+              <div className="px-4 pb-4 pt-1 bg-slate-50 border-t text-sm text-slate-700 whitespace-pre-wrap">
+                <p className="text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">
+                  Notas
+                </p>
+                {r.notes}
+              </div>
+            )}
           </div>
         ))}
 
@@ -159,6 +192,13 @@ export default function PatientPrescriptionsList({
                     previewPrescription.created_at
                   ).toLocaleDateString("es-MX")}
                 </p>
+
+                {/* Notas en el modal de preview */}
+                {previewPrescription.notes && (
+                  <p className="text-xs text-slate-600 mt-1 max-w-lg line-clamp-2">
+                    {previewPrescription.notes}
+                  </p>
+                )}
               </div>
 
               <div className="flex gap-3 items-center">

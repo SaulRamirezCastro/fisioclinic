@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "../Button";
 import api from "../../api/axios";
+import { compressImage, formatBytes } from "../../utils/compressImage";
 
 type Props = {
   onCancel: () => void;
@@ -31,6 +32,11 @@ export default function CreatePatientView({ onCancel, onCreated }: Props) {
 
   const [birthDate, setBirthDate] = useState("");
   const [photo, setPhoto] = useState<File | null>(null);
+  const [photoSize, setPhotoSize] = useState<{
+    original: number;
+    compressed: number;
+  } | null>(null);
+  const [compressing, setCompressing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
@@ -54,7 +60,34 @@ export default function CreatePatientView({ onCancel, onCreated }: Props) {
   const markTouched = (name: string) =>
     setTouched(prev => ({ ...prev, [name]: true }));
 
-  /* ---------------- FOTO PREVIEW ---------------- */
+  /* ---------------- FOTO + COMPRESIÓN ---------------- */
+
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+
+    if (!file) {
+      setPhoto(null);
+      setPhotoSize(null);
+      return;
+    }
+
+    try {
+      setCompressing(true);
+
+      const { file: compressed, originalSize, compressedSize } = await compressImage(file, {
+        maxWidth: 1280,
+        maxHeight: 1280,
+        quality: 0.75,
+      });
+
+      setPhoto(compressed);
+      setPhotoSize({ original: originalSize, compressed: compressedSize });
+    } catch (err) {
+      console.error("❌ Error al comprimir imagen:", err);
+    } finally {
+      setCompressing(false);
+    }
+  };
 
   const previewUrl = useMemo(() => {
     if (!photo) return null;
@@ -94,7 +127,6 @@ export default function CreatePatientView({ onCancel, onCreated }: Props) {
 
       onCreated(res.data);
       navigate("/patients", { state: { created: true } });
-
     } finally {
       setLoading(false);
     }
@@ -118,7 +150,7 @@ export default function CreatePatientView({ onCancel, onCreated }: Props) {
 
         <div className="grid md:grid-cols-[auto_1fr] gap-5">
           {/* FOTO */}
-          <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center gap-1">
             <label htmlFor="photo" className="cursor-pointer">
               <input
                 id="photo"
@@ -126,25 +158,39 @@ export default function CreatePatientView({ onCancel, onCreated }: Props) {
                 accept="image/*"
                 capture="user"
                 className="hidden"
-                onChange={(e) => setPhoto(e.target.files?.[0] || null)}
+                disabled={compressing}
+                onChange={handlePhotoChange}
               />
 
-              <div className="w-28 aspect-square rounded-xl border-2 border-dashed flex items-center justify-center overflow-hidden bg-slate-50 hover:bg-slate-100 transition">
+              <div className="w-28 aspect-square rounded-xl border-2 border-dashed flex items-center justify-center overflow-hidden bg-slate-50 hover:bg-slate-100 transition relative">
+                {compressing && (
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-xl z-10">
+                    <span className="text-white text-xs font-medium text-center px-1">
+                      Optimizando...
+                    </span>
+                  </div>
+                )}
                 {previewUrl ? (
-                  <img
-                    src={previewUrl}
-                    className="w-full h-full object-cover"
-                  />
+                  <img src={previewUrl} className="w-full h-full object-cover" />
                 ) : (
                   <span className="text-slate-400 text-xs">📷 Foto</span>
                 )}
               </div>
             </label>
+
+            {/* Feedback de compresión */}
+            {photoSize && !compressing && (
+              <p className="text-xs text-emerald-600 text-center">
+                <span className="line-through text-slate-400">
+                  {formatBytes(photoSize.original)}
+                </span>{" "}
+                → {formatBytes(photoSize.compressed)}
+              </p>
+            )}
           </div>
 
           {/* NOMBRE */}
           <div className="space-y-4">
-
             <div>
               <label htmlFor="full_name" className="label">
                 Nombre completo *
@@ -179,7 +225,6 @@ export default function CreatePatientView({ onCancel, onCreated }: Props) {
                 </p>
               )}
             </div>
-
           </div>
         </div>
       </section>
@@ -190,7 +235,6 @@ export default function CreatePatientView({ onCancel, onCreated }: Props) {
         <h3 className="font-semibold text-slate-700">Contacto</h3>
 
         <div className="grid md:grid-cols-2 gap-4">
-
           <div>
             <label htmlFor="phone" className="label">Teléfono *</label>
             <input
@@ -242,7 +286,6 @@ export default function CreatePatientView({ onCancel, onCreated }: Props) {
               className="input w-full"
             />
           </div>
-
         </div>
       </section>
 
@@ -252,7 +295,6 @@ export default function CreatePatientView({ onCancel, onCreated }: Props) {
         <h3 className="font-semibold text-slate-700">Dirección</h3>
 
         <div className="grid md:grid-cols-2 gap-4">
-
           <div>
             <label htmlFor="street" className="label">Calle</label>
             <input
@@ -309,19 +351,15 @@ export default function CreatePatientView({ onCancel, onCreated }: Props) {
               className="input w-full"
             />
           </div>
-
         </div>
       </section>
 
       {/* ---------------- CLÍNICO ---------------- */}
 
       <section className="space-y-4">
-        <h3 className="font-semibold text-slate-700">
-          Información clínica
-        </h3>
+        <h3 className="font-semibold text-slate-700">Información clínica</h3>
 
         <div className="space-y-3">
-
           <div>
             <label htmlFor="recommended_by" className="label">
               Recomendado por
@@ -362,9 +400,7 @@ export default function CreatePatientView({ onCancel, onCreated }: Props) {
           </div>
 
           <div>
-            <label htmlFor="diagnosis" className="label">
-              Diagnóstico
-            </label>
+            <label htmlFor="diagnosis" className="label">Diagnóstico</label>
             <textarea
               id="diagnosis"
               name="diagnosis"
@@ -375,9 +411,7 @@ export default function CreatePatientView({ onCancel, onCreated }: Props) {
           </div>
 
           <div>
-            <label htmlFor="notes" className="label">
-              Observaciones
-            </label>
+            <label htmlFor="notes" className="label">Observaciones</label>
             <textarea
               id="notes"
               name="notes"
@@ -386,16 +420,13 @@ export default function CreatePatientView({ onCancel, onCreated }: Props) {
               className="input h-20"
             />
           </div>
-
         </div>
       </section>
 
       {/* ---------------- ACTIONS ---------------- */}
 
       <footer className="border-t pt-5 flex justify-between">
-        <span className="text-sm text-slate-500">
-          Podrás editar después
-        </span>
+        <span className="text-sm text-slate-500">Podrás editar después</span>
 
         <div className="flex gap-3">
           <Button variant="secondary" onClick={onCancel}>
@@ -404,7 +435,7 @@ export default function CreatePatientView({ onCancel, onCreated }: Props) {
 
           <Button
             onClick={handleSubmit}
-            disabled={loading || hasErrors}
+            disabled={loading || hasErrors || compressing}
           >
             {loading ? "Guardando..." : "Crear ficha"}
           </Button>

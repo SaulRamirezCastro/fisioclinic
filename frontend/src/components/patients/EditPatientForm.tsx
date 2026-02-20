@@ -2,6 +2,7 @@ import { useState } from "react";
 import React from "react";
 import Button from "../Button";
 import api from "../../api/axios";
+import { compressImage, formatBytes } from "../../utils/compressImage";
 
 export default function EditPatientForm({
   patient,
@@ -12,6 +13,11 @@ export default function EditPatientForm({
   const [loading, setLoading] = useState(false);
   const [newPhoto, setNewPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [compressing, setCompressing] = useState(false);
+  const [photoSize, setPhotoSize] = useState<{
+    original: number;
+    compressed: number;
+  } | null>(null);
   const [deletingPhoto, setDeletingPhoto] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -19,41 +25,71 @@ export default function EditPatientForm({
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  // ── Selección y compresión de foto ──────────────────────────────────────
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+
+    if (!file) {
+      setNewPhoto(null);
+      setPhotoPreview(null);
+      setPhotoSize(null);
+      return;
+    }
+
+    try {
+      setCompressing(true);
+      setError(null);
+
+      const { file: compressed, originalSize, compressedSize } = await compressImage(file, {
+        maxSizeBytes: 1 * 1024 * 1024, // 1 MB
+      });
+
+      setPhotoSize({ original: originalSize, compressed: compressedSize });
+      setNewPhoto(compressed);
+
+      const reader = new FileReader();
+      reader.onloadend = () => setPhotoPreview(reader.result as string);
+      reader.readAsDataURL(compressed);
+    } catch (err) {
+      console.error("❌ Error al comprimir imagen:", err);
+      setError("No se pudo comprimir la imagen. Intenta con otra foto.");
+    } finally {
+      setCompressing(false);
+    }
+  };
+
+  // ── Guardar ─────────────────────────────────────────────────────────────
   const save = async () => {
-      try {
-        setLoading(true);
+    try {
+      setLoading(true);
 
-        const data = new FormData();
+      const data = new FormData();
 
-        Object.entries(form).forEach(([key, value]) => {
-          if (value !== null && value !== undefined && key !== "photo") {
-            data.append(key, value as any);
-          }
-        });
-
-        if (newPhoto) {
-          data.append("photo", newPhoto);
+      Object.entries(form).forEach(([key, value]) => {
+        if (value !== null && value !== undefined && key !== "photo") {
+          data.append(key, value as any);
         }
+      });
 
-        const res = await api.patch(
-          `patients/${patient.id}/`,
-          data,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          }
-        );
-
-        onSaved(res.data);
-        setForm(res.data);
-        setPhotoPreview(null);
-        setNewPhoto(null);
-      } finally {
-        setLoading(false);
+      if (newPhoto) {
+        data.append("photo", newPhoto);
       }
-    };
 
+      const res = await api.patch(`patients/${patient.id}/`, data, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      onSaved(res.data);
+      setForm(res.data);
+      setPhotoPreview(null);
+      setNewPhoto(null);
+      setPhotoSize(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ── Eliminar foto ────────────────────────────────────────────────────────
   const handleDeletePhoto = async () => {
     if (!confirm("¿Eliminar la foto del paciente?")) return;
 
@@ -63,11 +99,10 @@ export default function EditPatientForm({
 
       await api.delete(`patients/${patient.id}/delete_photo/`);
 
-      // Actualizar estado local
       setForm({ ...form, photo: null });
       setNewPhoto(null);
       setPhotoPreview(null);
-
+      setPhotoSize(null);
     } catch (err: any) {
       console.error("❌ Error al eliminar foto:", err);
 
@@ -77,7 +112,6 @@ export default function EditPatientForm({
         "Error al eliminar la foto";
 
       setError(errorMessage);
-
     } finally {
       setDeletingPhoto(false);
     }
@@ -85,10 +119,7 @@ export default function EditPatientForm({
 
   return (
     <div className="bg-white rounded-2xl shadow p-6 space-y-4">
-
-      <h2 className="text-lg font-semibold">
-        Editar información del paciente
-      </h2>
+      <h2 className="text-lg font-semibold">Editar información del paciente</h2>
 
       {/* ERROR MESSAGE */}
       {error && (
@@ -102,7 +133,15 @@ export default function EditPatientForm({
         <h3 className="font-semibold">Foto del paciente</h3>
 
         <div className="flex items-center gap-4">
-          <div className="w-48 h-48 rounded-2xl overflow-hidden bg-slate-100 flex items-center justify-center shadow-md">
+          {/* Preview */}
+          <div className="w-48 h-48 rounded-2xl overflow-hidden bg-slate-100 flex items-center justify-center shadow-md relative">
+            {compressing && (
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-2xl z-10">
+                <span className="text-white text-xs font-medium">
+                  Optimizando...
+                </span>
+              </div>
+            )}
             {photoPreview ? (
               <img
                 src={photoPreview}
@@ -116,62 +155,62 @@ export default function EditPatientForm({
                 className="w-full h-full object-cover"
               />
             ) : (
-              <span className="text-slate-400 text-sm">
-                Sin foto
-              </span>
+              <span className="text-slate-400 text-sm">Sin foto</span>
             )}
           </div>
 
+          {/* Controles */}
           <div className="space-y-2">
-            {/* CAMBIAR */}
+            {/* CAMBIAR / AGREGAR */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                {newPhoto ? 'Cambiar foto' : 'Agregar foto'}
+                {newPhoto ? "Cambiar foto" : "Agregar foto"}
               </label>
               <input
                 type="file"
                 accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0] || null;
-                  setNewPhoto(file);
-
-                  if (file) {
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                      setPhotoPreview(reader.result as string);
-                    };
-                    reader.readAsDataURL(file);
-                  } else {
-                    setPhotoPreview(null);
-                  }
-                }}
-                className="text-sm"
+                disabled={compressing}
+                onChange={handlePhotoChange}
+                className="text-sm disabled:opacity-50"
               />
-              {newPhoto && (
+
+              {/* Feedback de compresión */}
+              {newPhoto && photoSize && (
                 <p className="text-xs text-emerald-600 mt-1">
-                  ✓ Foto seleccionada: {newPhoto.name}
+                  ✓ {newPhoto.name} —{" "}
+                  <span className="line-through text-slate-400">
+                    {formatBytes(photoSize.original)}
+                  </span>{" "}
+                  → {formatBytes(photoSize.compressed)}
+                </p>
+              )}
+
+              {compressing && (
+                <p className="text-xs text-slate-500 mt-1">
+                  Optimizando imagen...
                 </p>
               )}
             </div>
 
-            {/* ELIMINAR */}
+            {/* ELIMINAR foto existente */}
             {form.photo && !newPhoto && (
               <Button
                 variant="danger"
                 onClick={handleDeletePhoto}
                 disabled={deletingPhoto}
               >
-                {deletingPhoto ? 'Eliminando...' : 'Eliminar foto'}
+                {deletingPhoto ? "Eliminando..." : "Eliminar foto"}
               </Button>
             )}
 
-            {/* CANCELAR NUEVA FOTO */}
+            {/* CANCELAR nueva foto */}
             {newPhoto && (
               <Button
                 variant="secondary"
                 onClick={() => {
                   setNewPhoto(null);
                   setPhotoPreview(null);
+                  setPhotoSize(null);
                 }}
               >
                 Cancelar cambio de foto
@@ -182,9 +221,7 @@ export default function EditPatientForm({
       </section>
 
       {/* Datos generales */}
-      <h2 className="font-semibold mb-2">
-        Datos generales
-      </h2>
+      <h2 className="font-semibold mb-2">Datos generales</h2>
 
       <input
         name="full_name"
@@ -245,9 +282,7 @@ export default function EditPatientForm({
       />
 
       {/* Dirección */}
-      <h2 className="font-semibold mb-2 mt-4">
-        Dirección
-      </h2>
+      <h2 className="font-semibold mb-2 mt-4">Dirección</h2>
 
       <input
         name="street"
@@ -291,9 +326,7 @@ export default function EditPatientForm({
       />
 
       {/* Información Clínica */}
-      <h2 className="font-semibold mb-2 mt-4">
-        Información Clínica
-      </h2>
+      <h2 className="font-semibold mb-2 mt-4">Información Clínica</h2>
 
       <textarea
         name="diagnosis"
@@ -332,8 +365,8 @@ export default function EditPatientForm({
         <Button variant="secondary" onClick={onCancel} disabled={loading}>
           Cancelar
         </Button>
-        <Button onClick={save} disabled={loading}>
-          {loading ? 'Guardando...' : 'Guardar cambios'}
+        <Button onClick={save} disabled={loading || compressing}>
+          {loading ? "Guardando..." : "Guardar cambios"}
         </Button>
       </div>
     </div>
