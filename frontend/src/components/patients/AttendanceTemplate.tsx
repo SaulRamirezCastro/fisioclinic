@@ -165,29 +165,86 @@ export default function AttendanceTemplate({
       {/* ── Botones ── */}
       <div className="action-buttons no-print">
         <button
-          onClick={handleDownload}
-          disabled={isDownloading || isLoading}
+          onClick={handleDownloadDocx}
+          disabled={isGenerating}
           className="btn-download"
         >
-          {isDownloading ? "Generando..." : "⬇️ Descargar Word (.docx)"}
+          {isGenerating ? "Generando..." : "⬇️ Descargar Word (.docx)"}
         </button>
       </div>
 
-      {/* ── Spinner mientras carga ── */}
-      {isLoading && (
-        <div className="preview-loading no-print">
-          <div className="spinner" />
-          <span>Generando vista previa...</span>
+      {/* ── Vista previa ── */}
+      <div ref={printRef} className="attendance-sheet">
+
+        {/* HEADER */}
+        <div className="header">
+          <div className="header-logo">
+            <img src={logo} alt="Logo Fisioclinic" />
+          </div>
+          <div className="header-text">
+            <div className="document-title">RELACIÓN DE ASISTENCIAS</div>
+            <div className="document-period">
+              <strong>PERIODO DE ASISTENCIA:</strong>
+              <br />
+              {formatDate(periodStart)} AL {formatDate(periodEnd)}
+            </div>
+          </div>
         </div>
-      )}
 
-      {/* ── Contenedor donde docx-preview inyecta el documento ── */}
-      <div
-        ref={previewRef}
-        className="docx-preview-container"
-        style={{ display: isLoading ? "none" : "block" }}
-      />
+        {/* PACIENTE */}
+        <div className="patient-line">
+          <strong>PACIENTE:</strong> {patientName}
+        </div>
 
+        {/* TABLA DE SESIONES */}
+        <div className="sessions-section">
+          <div className="sessions-title">REGISTRO DE SESIONES ASISTIDAS</div>
+          <table className="sessions-table">
+            <thead>
+              <tr>
+                <th>No. Sesión</th>
+                <th>Fecha</th>
+                <th>Firma del Paciente</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sesiones.length > 0 ? (
+                sesiones.map((s) => (
+                  <tr key={s.numeroSesion}>
+                    <td className="center">{s.numeroSesion}</td>
+                    <td className="center">{s.fechaSesion}</td>
+                    <td className="firma-cell"></td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={3} className="center empty-row">
+                    Sin sesiones registradas
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* FIRMA DEL MÉDICO */}
+        <div className="footer-section">
+          <div className="footer-attention">ATENTAMENTE</div>
+          <div className="footer-professional">{professionalName}</div>
+          <div className="footer-license">{professionalLicense}</div>
+          <div className="footer-social">
+            <div>Fisioclinic_ver</div>
+            <div>www.fisioclinic.com.mx</div>
+            <div>Fisioclinic s.c.</div>
+          </div>
+          <div className="footer-bar">
+            Bernal Díaz del Castillo #160 entre Paseo de las Flores y S.S. Juan
+            Pablo II, Fracc. Virginia, Boca del Río, Ver. Teléfono (2299 27
+            3730) Móvil (2291 21 0390)
+          </div>
+        </div>
+
+      </div>
     </div>
   );
 }
