@@ -1,11 +1,12 @@
 import "./attendance-template.css";
-import React, { useRef, useState } from "react";
-import logo from "../../assets/logo.png";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import PizZip from "pizzip";
 import Docxtemplater from "docxtemplater";
 import { saveAs } from "file-saver";
+import mammoth from "mammoth";
 
-const TEMPLATE_URL = "/bitacora_template.docx";
+// El archivo debe estar en: frontend/public/bicatora_teplate.docx
+const TEMPLATE_URL = "/bicatora_teplate.docx";
 
 interface Props {
   patientName: string;
@@ -26,8 +27,9 @@ export default function AttendanceTemplate({
   professionalName = "Lic. T.F. Salvador Antonio Pomar Castañeda",
   professionalLicense = "CÉD. PROF. 3719269",
 }: Props) {
-  const printRef = useRef<HTMLDivElement>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [previewHtml, setPreviewHtml] = useState<string>("");
+  const [isLoading, setIsLoading]     = useState(true);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const formatDate = (date?: string | null) => {
     if (!date) return "—";
@@ -52,80 +54,102 @@ export default function AttendanceTemplate({
     firma: "",
   }));
 
-  // ── Impresión en ventana nueva ───────────────────────────────────────────
-  const handlePrint = () => {
-    const printContents = printRef.current?.innerHTML;
-    if (!printContents) return;
+  // ── Construye el blob del .docx con los datos inyectados ─────────────────
+  const buildDocxBlob = useCallback(async (): Promise<Blob> => {
+    const response = await fetch(TEMPLATE_URL);
+    if (!response.ok) {
+      throw new Error(
+        `No se pudo cargar el template (${response.status}). ` +
+        `Asegúrate de que el archivo está en /public/bicatora_teplate.docx`
+      );
+    }
 
-    const styles = Array.from(
-      document.querySelectorAll('link[rel="stylesheet"], style')
-    )
-      .map((el) => el.outerHTML)
-      .join("\n");
+    const arrayBuffer = await response.arrayBuffer();
+    const zip = new PizZip(arrayBuffer);
+    const doc = new Docxtemplater(zip, {
+      paragraphLoop: true,
+      linebreaks: true,
+    });
 
-    const win = window.open("", "_blank", "width=900,height=700");
-    if (!win) return;
+    doc.render({
+      paciente:          patientName,
+      fechaReporte,
+      periodoInicio:     formatDate(periodStart),
+      periodoFin:        formatDate(periodEnd),
+      sesiones,
+      nombreMedico:      professionalName,
+      cedulaProfesional: professionalLicense,
+      firmaMedico:       "",
+    });
 
-    win.document.write(`
-      <!DOCTYPE html>
-      <html lang="es">
-        <head>
-          <meta charset="UTF-8" />
-          <title>Bitácora de Asistencias</title>
-          ${styles}
-        </head>
-        <body>
-          ${printContents}
-        </body>
-      </html>
-    `);
+    return doc.getZip().generate({
+      type: "blob",
+      mimeType:
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [patientName, periodStart, periodEnd, reportDate, attendedDates, professionalName, professionalLicense]);
 
-    win.document.close();
-    win.focus();
+  // ── Regenera la vista previa con mammoth cuando cambian los props ─────────
+  useEffect(() => {
+    let cancelled = false;
+    setIsLoading(true);
 
-    win.onload = () => {
-      win.print();
-      win.close();
-    };
-  };
+    buildDocxBlob()
+      .then((blob) => blob.arrayBuffer())
+      .then((buffer) =>
+        mammoth.convertToHtml({ arrayBuffer: buffer }, {
+          styleMap: [
+            "p[style-name='heading 1'] => h1:fresh",
+            "p[style-name='heading 2'] => h2:fresh",
+          ],
+        })
+      )
+      .then(({ value }) => {
+        if (!cancelled) setPreviewHtml(value);
+      })
+      .catch((err: Error) => {
+        if (!cancelled)
+          setPreviewHtml(`<p style="color:red">⚠️ ${err.message}</p>`);
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
 
-  // ── Descarga DOCX ────────────────────────────────────────────────────────
-  const handleDownloadDocx = async () => {
-    setIsGenerating(true);
-    try {
-      const response = await fetch(TEMPLATE_URL);
-      if (!response.ok) {
-        throw new Error(
-          `No se pudo cargar el template (${response.status}). ` +
-            `Asegúrate de que el archivo está en /public/bitacora_template.docx`
-        );
+    return () => { cancelled = true; };
+  }, [buildDocxBlob]);
+
+  // ── Impresión: solo muestra el template ──────────────────────────────────
+  useEffect(() => {
+    const styleId = "attendance-print-style";
+    if (document.getElementById(styleId)) return;
+    const style = document.createElement("style");
+    style.id = styleId;
+    style.innerHTML = `
+      @media print {
+        body > * { display: none !important; }
+        #attendance-print-root { display: block !important; }
+        #attendance-print-root .no-print { display: none !important; }
+        #attendance-print-root .docx-preview {
+          background: none !important;
+          padding: 0 !important;
+        }
+        #attendance-print-root .docx-content {
+          box-shadow: none !important;
+          border: none !important;
+          padding: 0 !important;
+        }
       }
+    `;
+    document.head.appendChild(style);
+    return () => { document.getElementById(styleId)?.remove(); };
+  }, []);
 
-      const arrayBuffer = await response.arrayBuffer();
-
-      const zip = new PizZip(arrayBuffer);
-      const doc = new Docxtemplater(zip, {
-        paragraphLoop: true,
-        linebreaks: true,
-      });
-
-      doc.render({
-        paciente: patientName,
-        fecha: fechaReporte,
-        periodoInicio: formatDate(periodStart),
-        periodoFin: formatDate(periodEnd),
-        sesiones,
-        nombreMedico: professionalName,
-        cedulaProfesional: professionalLicense,
-        firmaMedico: "",
-      });
-
-      const blob = doc.getZip().generate({
-        type: "blob",
-        mimeType:
-          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      });
-
+  // ── Descarga el .docx ─────────────────────────────────────────────────────
+  const handleDownload = async () => {
+    setIsDownloading(true);
+    try {
+      const blob = await buildDocxBlob();
       saveAs(blob, `Asistencias_${patientName.replace(/\s+/g, "_")}.docx`);
     } catch (error: any) {
       if (error.properties?.errors?.length) {
@@ -135,107 +159,48 @@ export default function AttendanceTemplate({
         console.error("Errores en el template:\n" + details);
         alert("Error en el template:\n" + details);
       } else {
-        console.error("Error al generar el DOCX:", error);
+        console.error("Error al descargar:", error);
         alert(`Error: ${error.message}`);
       }
     } finally {
-      setIsGenerating(false);
+      setIsDownloading(false);
     }
   };
+
+  const handlePrint = () => window.print();
 
   return (
     <div id="attendance-print-root" className="attendance-wrapper">
 
       {/* ── Botones ── */}
       <div className="action-buttons no-print">
-        <button onClick={handlePrint} className="btn-print">
+        <button onClick={handlePrint} disabled={isLoading} className="btn-print">
           🖨️ Imprimir
         </button>
         <button
-          onClick={handleDownloadDocx}
-          disabled={isGenerating}
+          onClick={handleDownload}
+          disabled={isDownloading || isLoading}
           className="btn-download"
         >
-          {isGenerating ? "Generando..." : "⬇️ Descargar Word (.docx)"}
+          {isDownloading ? "Generando..." : "⬇️ Descargar Word (.docx)"}
         </button>
       </div>
 
-      {/* ── Vista previa ── */}
-      <div ref={printRef} className="attendance-sheet">
-
-        {/* HEADER */}
-        <div className="header">
-          <div className="header-logo">
-            <img src={logo} alt="Logo Fisioclinic" />
+      {/* ── Vista previa del documento renderizado por mammoth ── */}
+      <div className="docx-preview">
+        {isLoading ? (
+          <div className="preview-loading">
+            <div className="spinner" />
+            <span>Generando vista previa...</span>
           </div>
-          <div className="header-text">
-            <div className="header-title">FISIOCLINIC</div>
-            <div className="header-subtitle">
-              Centro de Terapia Física y Rehabilitación
-            </div>
-            <div className="document-title">RELACIÓN DE ASISTENCIAS</div>
-            <div className="document-period">
-              <strong>PERIODO DE ASISTENCIA:</strong>
-              <br />
-              {formatDate(periodStart)} AL {formatDate(periodEnd)}
-            </div>
-          </div>
-        </div>
-
-        {/* PACIENTE */}
-        <div className="patient-line">
-          <strong>PACIENTE:</strong> {patientName}
-        </div>
-
-        {/* TABLA DE SESIONES */}
-        <div className="sessions-section">
-          <div className="sessions-title">REGISTRO DE SESIONES ASISTIDAS</div>
-          <table className="sessions-table">
-            <thead>
-              <tr>
-                <th>No. Sesión</th>
-                <th>Fecha</th>
-                <th>Firma del Paciente</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sesiones.length > 0 ? (
-                sesiones.map((s) => (
-                  <tr key={s.numeroSesion}>
-                    <td className="center">{s.numeroSesion}</td>
-                    <td className="center">{s.fechaSesion}</td>
-                    <td className="firma-cell"></td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={3} className="center empty-row">
-                    Sin sesiones registradas
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* FIRMA DEL MÉDICO */}
-        <div className="footer-section">
-          <div className="footer-attention">ATENTAMENTE</div>
-          <div className="footer-professional">{professionalName}</div>
-          <div className="footer-license">{professionalLicense}</div>
-          <div className="footer-social">
-            <div>Fisioclinic_ver</div>
-            <div>www.fisioclinic.com.mx</div>
-            <div>Fisioclinic s.c.</div>
-          </div>
-          <div className="footer-bar">
-            Bernal Díaz del Castillo #160 entre Paseo de las Flores y S.S. Juan
-            Pablo II, Fracc. Virginia, Boca del Río, Ver. Teléfono (2299 27
-            3730) Móvil (2291 21 0390)
-          </div>
-        </div>
-
+        ) : (
+          <div
+            className="docx-content"
+            dangerouslySetInnerHTML={{ __html: previewHtml }}
+          />
+        )}
       </div>
+
     </div>
   );
 }
