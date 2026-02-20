@@ -6,7 +6,7 @@ import { saveAs } from "file-saver";
 import mammoth from "mammoth";
 
 // El archivo debe estar en: frontend/public/bicatora_teplate.docx
-const TEMPLATE_URL = "/bicatora_teplate.docx";
+const TEMPLATE_URL = "/bitacora_template.docx";
 
 interface Props {
   patientName: string;
