@@ -1,276 +1,248 @@
-/* =====================================================
-   CONFIGURACIÓN GLOBAL
-===================================================== */
-
-* {
-  box-sizing: border-box;
+/* ── Wrapper y botones ─────────────────────────────────────────────────── */
+.attendance-wrapper {
+  font-family: "Aptos", "Calibri", sans-serif;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1rem;
 }
 
-body {
-  margin: 0;
-  padding: 0;
-  background: #e5e5e5;
-  font-family: Arial, Helvetica, sans-serif;
-  color: #000;
-}
-
-/* =====================================================
-   CONTENEDOR PRINCIPAL - HOJA CARTA
-===================================================== */
-
-.attendance-sheet {
-  width: 216mm;
-  height: 279mm; /* 🔥 Cambiado de min-height */
-
-  margin: 30px auto;
-  padding: 20mm 20mm 20mm 30mm;
-
-  background: white;
-
-  border-radius: 4px;
-  border: 1px solid #cfcfcf;
-
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.15);
-
-  overflow: hidden; /* 🔥 Evita que se cree otra hoja */
-}
-
-/* =====================================================
-   HEADER
-===================================================== */
-
-.header {
-  display: grid;
-  grid-template-columns: 180px 1fr 180px;
-  align-items: center;
-
-  border-bottom: 2px solid black;
-  padding-bottom: 12px;
-  margin-bottom: 18px;
-}
-
-.header-logo {
+.action-buttons {
   display: flex;
-  justify-content: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.btn-print,
+.btn-download {
+  padding: 0.5rem 1.25rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  font-weight: 600;
+  transition: opacity 0.2s;
+}
+
+.btn-print {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.btn-download {
+  background: #0c443e;
+  color: #ffffff;
+}
+
+.btn-download:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-print:hover { opacity: 0.8; }
+.btn-download:hover:not(:disabled) { opacity: 0.85; }
+
+/* ── Hoja ──────────────────────────────────────────────────────────────── */
+.attendance-sheet {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  padding: 2rem 2.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* ── Header ────────────────────────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 3px solid #0c443e;
 }
 
 .header-logo img {
-  max-width: 160px;
-  height: auto;
+  height: 72px;
+  width: auto;
   object-fit: contain;
-}
-
-.header-spacer {
-  width: 180px;
 }
 
 .header-text {
   flex: 1;
-  text-align: center;
 }
 
 .header-title {
-  font-size: 20px;
-  font-weight: bold;
-  letter-spacing: 1px;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #0c443e;
+  letter-spacing: 2px;
 }
 
 .header-subtitle {
-  font-size: 13px;
-  margin-top: 3px;
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin-bottom: 0.4rem;
 }
 
 .document-title {
-  font-size: 16px;
-  font-weight: bold;
-  margin-top: 8px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #0c443e;
+  letter-spacing: 1px;
 }
 
-.document-month {
-  font-size: 13px;
-  margin-top: 3px;
-}
-
-.document-period {
-  font-size: 13px;
-  margin-top: 6px;
-  font-weight: bold;
-}
-
-/* =====================================================
-   PACIENTE
-===================================================== */
-
-.patient-line {
-  margin-top: 15px;
-  font-size: 13px;
-}
-
-/* =====================================================
-   LISTA DE ASISTENCIAS
-===================================================== */
-
-.attendance-list-container {
-  margin-top: 20px;
-}
-
-.attendance-list-title {
-  font-weight: bold;
-  border-bottom: 1px solid black;
-  padding-bottom: 4px;
-  margin-bottom: 10px;
-  font-size: 13px;
-}
-
-.attendance-list {
+/* ── Metadatos del reporte ─────────────────────────────────────────────── */
+.report-meta {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 0.35rem;
+  margin-bottom: 1.5rem;
+  background: #f9fafb;
+  border-left: 4px solid #0c443e;
+  padding: 0.75rem 1rem;
+  border-radius: 0 4px 4px 0;
 }
 
-.attendance-item {
-  border-bottom: 1px dotted black;
-  padding: 4px 0;
-  font-size: 13px;
-
-  page-break-inside: avoid;
+.report-meta-row {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.9rem;
 }
 
-/* =====================================================
-   OBSERVACIONES
-===================================================== */
-
-.notes-section {
-  margin-top: 30px;
-  page-break-inside: avoid;
+.report-meta-row .label {
+  font-weight: 700;
+  color: #374151;
+  min-width: 180px;
 }
 
-.notes-title {
-  font-weight: bold;
-  margin-bottom: 6px;
-  font-size: 13px;
+.report-meta-row .value {
+  color: #111827;
 }
 
-.notes-box {
-  border: 1px solid black;
-  min-height: 80px;
-  padding: 8px;
-  white-space: pre-line;
-  font-size: 13px;
+/* ── Tabla de sesiones ─────────────────────────────────────────────────── */
+.sessions-section {
+  margin-bottom: 2rem;
 }
 
-/* =====================================================
-   FIRMA
-===================================================== */
+.sessions-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0c443e;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+}
 
-.footer-section {
-  margin-top: 50px;
+.sessions-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.sessions-table thead tr {
+  background-color: #0c443e;
+  color: #ffffff;
+}
+
+.sessions-table th {
+  padding: 0.55rem 0.75rem;
   text-align: center;
-  page-break-inside: avoid;
+  font-weight: 600;
+  letter-spacing: 0.3px;
 }
 
-.footer-attention {
-  letter-spacing: 4px;
-  margin-bottom: 40px;
-  font-weight: 500;
+.sessions-table tbody tr:nth-child(even) {
+  background-color: #f3f4f6;
 }
 
-.footer-professional {
-  margin-top: 30px;
-  font-size: 14px;
+.sessions-table tbody tr:hover {
+  background-color: #e9f5f0;
 }
 
-.footer-license {
-  font-weight: bold;
-  margin-top: 5px;
-  font-size: 13px;
+.sessions-table td {
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid #e5e7eb;
+  color: #111827;
 }
 
-.footer-bar {
-  margin-top: 20px;
-  background: #2f4f4f;
-  color: white;
-  padding: 8px 12px;
-  font-size: 12px;
+.sessions-table td.center,
+.sessions-table th {
+  text-align: center;
+}
+
+.sessions-table td.firma-cell {
+  height: 36px; /* espacio para firma física */
+}
+
+.empty-row {
+  color: #9ca3af;
+  font-style: italic;
+  padding: 1rem;
+}
+
+/* ── Firma del médico ──────────────────────────────────────────────────── */
+.doctor-signature {
+  margin-top: 2.5rem;
+  text-align: center;
+}
+
+.signature-line {
+  width: 240px;
+  border-bottom: 1.5px solid #374151;
+  margin: 0 auto 0.4rem;
+}
+
+.doctor-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #111827;
+}
+
+.doctor-license {
+  font-size: 0.82rem;
+  color: #6b7280;
+  margin-top: 0.1rem;
+}
+
+/* ── Footer ────────────────────────────────────────────────────────────── */
+.footer-section {
+  margin-top: 2.5rem;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 0.75rem;
 }
 
 .footer-social {
-  margin-top: 20px;
   display: flex;
   justify-content: center;
-  gap: 40px;
-  font-size: 13px;
+  gap: 2rem;
+  font-size: 0.78rem;
+  color: #6b7280;
+  margin-bottom: 0.5rem;
 }
 
-/* =====================================================
-   EDITOR DE OBSERVACIONES (NO SE IMPRIME)
-===================================================== */
-
-.notes-editor {
-  width: 216mm;
-  margin: 20px auto;
+.footer-bar {
+  background-color: #0c443e;
+  color: #ffffff;
+  text-align: center;
+  font-size: 0.75rem;
+  padding: 0.5rem 1rem;
+  border-radius: 2px;
+  line-height: 1.5;
 }
 
-.notes-editor textarea {
-  width: 100%;
-  padding: 8px;
-  resize: vertical;
-}
-
-/* =====================================================
-   CONFIGURACIÓN DE IMPRESIÓN
-===================================================== */
-
-@page {
-  size: letter;
-  margin: 0;
-}
-
+/* ── Print ─────────────────────────────────────────────────────────────── */
 @media print {
+  .no-print {
+    display: none !important;
+  }
 
-  html, body {
-    width: 216mm;
-    height: 279mm;
-    margin: 0;
+  .attendance-wrapper {
     padding: 0;
-    background: white;
-  }
-
-  body * {
-    visibility: hidden;
-  }
-
-  .attendance-sheet,
-  .attendance-sheet * {
-    visibility: visible;
+    max-width: 100%;
   }
 
   .attendance-sheet {
-    position: absolute;
-    top: 0;
-    left: 0;
-
-    width: 216mm;
-    height: 279mm; /* 🔥 Corregido */
-
-    margin: 0;
-    padding: 20mm 20mm 20mm 30mm;
-
     border: none;
     box-shadow: none;
-    background: white;
-
-    overflow: hidden;
-  }
-
-  .notes-editor,
-  button {
-    display: none !important;
+    padding: 0;
   }
 }
-
-/* =====================================================
-   CONTROL DE SALTO DE PÁGINA
-===================================================== */
-
-/* 🔥 Eliminado page-break-after: always */
