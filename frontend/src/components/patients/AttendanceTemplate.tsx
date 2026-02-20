@@ -174,7 +174,6 @@ export default function AttendanceTemplate({
       </div>
 
       {/* ── Vista previa ── */}
-      <div ref={printRef} className="attendance-sheet">
 
         {/* HEADER */}
         <div className="header">
@@ -243,8 +242,6 @@ export default function AttendanceTemplate({
             3730) Móvil (2291 21 0390)
           </div>
         </div>
-
-      </div>
     </div>
   );
 }
