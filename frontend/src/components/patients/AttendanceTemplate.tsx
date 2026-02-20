@@ -1,11 +1,10 @@
 import "./attendance-template.css";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import logo from "../../assets/logo.png";
 import PizZip from "pizzip";
 import Docxtemplater from "docxtemplater";
 import { saveAs } from "file-saver";
 
-// El archivo debe estar en: frontend/public/bicatora_teplate.docx
 const TEMPLATE_URL = "/bitacora_template.docx";
 
 interface Props {
@@ -53,57 +52,74 @@ export default function AttendanceTemplate({
     firma: "",
   }));
 
-  // ── Impresión: solo muestra el template ─────────────────────────────────
-  useEffect(() => {
-    const styleId = "attendance-print-style";
-    if (document.getElementById(styleId)) return;
-    const style = document.createElement("style");
-    style.id = styleId;
-    style.innerHTML = `
-      @media print {
-        body > * { display: none !important; }
-        #attendance-print-root { display: block !important; }
-      }
-    `;
-    document.head.appendChild(style);
-    return () => { document.getElementById(styleId)?.remove(); };
-  }, []);
+  // ── Impresión en ventana nueva ───────────────────────────────────────────
+  const handlePrint = () => {
+    const printContents = printRef.current?.innerHTML;
+    if (!printContents) return;
+
+    const styles = Array.from(
+      document.querySelectorAll('link[rel="stylesheet"], style')
+    )
+      .map((el) => el.outerHTML)
+      .join("\n");
+
+    const win = window.open("", "_blank", "width=900,height=700");
+    if (!win) return;
+
+    win.document.write(`
+      <!DOCTYPE html>
+      <html lang="es">
+        <head>
+          <meta charset="UTF-8" />
+          <title>Bitácora de Asistencias</title>
+          ${styles}
+        </head>
+        <body>
+          ${printContents}
+        </body>
+      </html>
+    `);
+
+    win.document.close();
+    win.focus();
+
+    win.onload = () => {
+      win.print();
+      win.close();
+    };
+  };
 
   // ── Descarga DOCX ────────────────────────────────────────────────────────
   const handleDownloadDocx = async () => {
     setIsGenerating(true);
     try {
-      // 1. Cargar el template como binario
       const response = await fetch(TEMPLATE_URL);
       if (!response.ok) {
         throw new Error(
           `No se pudo cargar el template (${response.status}). ` +
-          `Asegúrate de que el archivo está en /public/bicatora_teplate.docx`
+            `Asegúrate de que el archivo está en /public/bitacora_template.docx`
         );
       }
 
       const arrayBuffer = await response.arrayBuffer();
 
-      // 2. Inicializar PizZip + Docxtemplater
       const zip = new PizZip(arrayBuffer);
       const doc = new Docxtemplater(zip, {
-        paragraphLoop: true, // necesario para que el loop {#sesiones} repita filas
+        paragraphLoop: true,
         linebreaks: true,
       });
 
-      // 3. Renderizar con los datos — doc.render() reemplaza setData()+render()
       doc.render({
-        paciente:          patientName,
+        paciente: patientName,
         fechaReporte,
-        periodoInicio:     formatDate(periodStart),
-        periodoFin:        formatDate(periodEnd),
-        sesiones,          // array → loop {#sesiones}...{/sesiones}
-        nombreMedico:      professionalName,
+        periodoInicio: formatDate(periodStart),
+        periodoFin: formatDate(periodEnd),
+        sesiones,
+        nombreMedico: professionalName,
         cedulaProfesional: professionalLicense,
-        firmaMedico:       "",
+        firmaMedico: "",
       });
 
-      // 4. Generar blob y descargar
       const blob = doc.getZip().generate({
         type: "blob",
         mimeType:
@@ -111,9 +127,7 @@ export default function AttendanceTemplate({
       });
 
       saveAs(blob, `Asistencias_${patientName.replace(/\s+/g, "_")}.docx`);
-
     } catch (error: any) {
-      // Muestra el error detallado de docxtemplater si está disponible
       if (error.properties?.errors?.length) {
         const details = error.properties.errors
           .map((e: any) => `• ${e.properties?.explanation ?? e.message}`)
@@ -128,8 +142,6 @@ export default function AttendanceTemplate({
       setIsGenerating(false);
     }
   };
-
-  const handlePrint = () => window.print();
 
   return (
     <div id="attendance-print-root" className="attendance-wrapper">
