@@ -3,7 +3,8 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import PizZip from "pizzip";
 import Docxtemplater from "docxtemplater";
 import { saveAs } from "file-saver";
-import { renderAsync } from "docx-preview";
+import { renderAsync } from "docx-preview;
+import logo from "../../assets/logo.png";
 
 const TEMPLATE_URL = "/bitacora_template.docx";
 
