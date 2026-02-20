@@ -164,9 +164,6 @@ export default function AttendanceTemplate({
 
       {/* ── Botones ── */}
       <div className="action-buttons no-print">
-        <button onClick={handlePrint} disabled={isLoading} className="btn-print">
-          🖨️ Imprimir
-        </button>
         <button
           onClick={handleDownload}
           disabled={isDownloading || isLoading}
