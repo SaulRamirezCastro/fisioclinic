@@ -1,11 +1,12 @@
-/* ── Wrapper y botones ─────────────────────────────────────────────────── */
+/* ── Wrapper ────────────────────────────────────────────────────────────── */
 .attendance-wrapper {
   font-family: "Aptos", "Calibri", sans-serif;
-  max-width: 800px;
+  max-width: 860px;
   margin: 0 auto;
   padding: 1rem;
 }
 
+/* ── Botones ────────────────────────────────────────────────────────────── */
 .action-buttons {
   display: flex;
   gap: 0.75rem;
@@ -23,226 +24,163 @@
   transition: opacity 0.2s;
 }
 
-.btn-print {
-  background: #e5e7eb;
-  color: #374151;
-}
-
-.btn-download {
-  background: #0c443e;
-  color: #ffffff;
-}
-
-.btn-download:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.btn-print:hover { opacity: 0.8; }
+.btn-print               { background: #e5e7eb; color: #374151; }
+.btn-download            { background: #0c443e; color: #ffffff; }
+.btn-print:disabled,
+.btn-download:disabled   { opacity: 0.5; cursor: not-allowed; }
+.btn-print:hover:not(:disabled)    { opacity: 0.8; }
 .btn-download:hover:not(:disabled) { opacity: 0.85; }
 
-/* ── Hoja ──────────────────────────────────────────────────────────────── */
-.attendance-sheet {
-  background: #ffffff;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
-  padding: 2rem 2.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+/* ── Contenedor de la vista previa ─────────────────────────────────────── */
+.docx-preview {
+  background: #f3f4f6;
+  padding: 1.5rem;
+  border-radius: 6px;
+  min-height: 400px;
 }
 
-/* ── Header ────────────────────────────────────────────────────────────── */
-.header {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 3px solid #0c443e;
-}
-
-.header-logo img {
-  height: 72px;
-  width: auto;
-  object-fit: contain;
-}
-
-.header-text {
-  flex: 1;
-}
-
-.header-title {
-  font-size: 1.6rem;
-  font-weight: 800;
-  color: #0c443e;
-  letter-spacing: 2px;
-}
-
-.header-subtitle {
-  font-size: 0.85rem;
-  color: #6b7280;
-  margin-bottom: 0.4rem;
-}
-
-.document-title {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #0c443e;
-  letter-spacing: 1px;
-}
-
-/* ── Metadatos del reporte ─────────────────────────────────────────────── */
-.report-meta {
+/* ── Loading ────────────────────────────────────────────────────────────── */
+.preview-loading {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  margin-bottom: 1.5rem;
-  background: #f9fafb;
-  border-left: 4px solid #0c443e;
-  padding: 0.75rem 1rem;
-  border-radius: 0 4px 4px 0;
-}
-
-.report-meta-row {
-  display: flex;
-  gap: 0.5rem;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 4rem;
+  color: #6b7280;
   font-size: 0.9rem;
 }
 
-.report-meta-row .label {
-  font-weight: 700;
-  color: #374151;
-  min-width: 180px;
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid #d1d5db;
+  border-top-color: #0c443e;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
 }
 
-.report-meta-row .value {
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Documento renderizado por mammoth ─────────────────────────────────── */
+.docx-content {
+  background: #ffffff;
+  padding: 3rem 3.5rem;
+  border-radius: 4px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.10);
+  font-family: "Aptos", "Calibri", sans-serif;
+  font-size: 11pt;
+  line-height: 1.5;
   color: #111827;
+  min-height: 600px;
 }
 
-/* ── Tabla de sesiones ─────────────────────────────────────────────────── */
-.sessions-section {
-  margin-bottom: 2rem;
-}
-
-.sessions-title {
-  font-size: 0.95rem;
+/* Tipografía del documento */
+.docx-content h1 {
+  font-size: 16pt;
   font-weight: 700;
   color: #0c443e;
-  letter-spacing: 0.5px;
-  margin-bottom: 0.5rem;
-  text-transform: uppercase;
+  margin: 0 0 0.5rem;
 }
 
-.sessions-table {
+.docx-content h2 {
+  font-size: 13pt;
+  font-weight: 700;
+  color: #0c443e;
+  margin: 1rem 0 0.4rem;
+}
+
+.docx-content p {
+  margin: 0.25rem 0;
+}
+
+/* Tabla de sesiones */
+.docx-content table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.88rem;
+  margin: 0.75rem 0;
+  font-size: 10.5pt;
 }
 
-.sessions-table thead tr {
+.docx-content table thead tr {
   background-color: #0c443e;
   color: #ffffff;
 }
 
-.sessions-table th {
-  padding: 0.55rem 0.75rem;
+.docx-content table th {
+  padding: 0.45rem 0.75rem;
   text-align: center;
   font-weight: 600;
-  letter-spacing: 0.3px;
 }
 
-.sessions-table tbody tr:nth-child(even) {
-  background-color: #f3f4f6;
-}
-
-.sessions-table tbody tr:hover {
-  background-color: #e9f5f0;
-}
-
-.sessions-table td {
-  padding: 0.55rem 0.75rem;
-  border-bottom: 1px solid #e5e7eb;
-  color: #111827;
-}
-
-.sessions-table td.center,
-.sessions-table th {
+.docx-content table td {
+  padding: 0.45rem 0.75rem;
+  border: 1px solid #d1d5db;
   text-align: center;
 }
 
-.sessions-table td.firma-cell {
-  height: 36px; /* espacio para firma física */
+.docx-content table tbody tr:nth-child(even) {
+  background-color: #f9fafb;
 }
 
-.empty-row {
-  color: #9ca3af;
-  font-style: italic;
-  padding: 1rem;
-}
+/* ── Versión solo para impresión ────────────────────────────────────────── */
+.print-only { display: none; }
 
-/* ── Firma del médico ──────────────────────────────────────────────────── */
-.doctor-signature {
-  margin-top: 2.5rem;
-  text-align: center;
-}
-
-.signature-line {
-  width: 240px;
-  border-bottom: 1.5px solid #374151;
-  margin: 0 auto 0.4rem;
-}
-
-.doctor-name {
-  font-weight: 700;
-  font-size: 0.9rem;
-  color: #111827;
-}
-
-.doctor-license {
-  font-size: 0.82rem;
-  color: #6b7280;
-  margin-top: 0.1rem;
-}
-
-/* ── Footer ────────────────────────────────────────────────────────────── */
-.footer-section {
-  margin-top: 2.5rem;
-  border-top: 1px solid #e5e7eb;
-  padding-top: 0.75rem;
-}
-
-.footer-social {
-  display: flex;
-  justify-content: center;
-  gap: 2rem;
-  font-size: 0.78rem;
-  color: #6b7280;
-  margin-bottom: 0.5rem;
-}
-
-.footer-bar {
-  background-color: #0c443e;
-  color: #ffffff;
-  text-align: center;
-  font-size: 0.75rem;
-  padding: 0.5rem 1rem;
-  border-radius: 2px;
-  line-height: 1.5;
-}
-
-/* ── Print ─────────────────────────────────────────────────────────────── */
+/* ── Print ──────────────────────────────────────────────────────────────── */
 @media print {
-  .no-print {
+  .no-print  { display: none !important; }
+  .print-only {
+    display: block;
+  }
+
+  .attendance-wrapper { padding: 0; max-width: 100%; }
+
+  .docx-content {
+    box-shadow: none;
+    padding: 0;
+    border-radius: 0;
+  }
+}
+
+/* ── Print: solo muestra el template, oculta todo lo demás ─────────────── */
+@media print {
+  /* Oculta toda la página */
+  body > * {
     display: none !important;
   }
 
-  .attendance-wrapper {
+  /* Muestra solo el root del template */
+  #attendance-print-root {
+    display: block !important;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    margin: 0;
     padding: 0;
-    max-width: 100%;
   }
 
-  .attendance-sheet {
-    border: none;
-    box-shadow: none;
-    padding: 0;
+  /* Resetea sombras y bordes para impresión limpia */
+  #attendance-print-root .attendance-sheet {
+    box-shadow: none !important;
+    border: none !important;
+    padding: 1cm !important;
+  }
+
+  /* Fuerza colores de fondo en impresión */
+  #attendance-print-root .sessions-table thead tr {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    background-color: #0c443e !important;
+    color: #ffffff !important;
+  }
+
+  #attendance-print-root .footer-bar {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    background-color: #0c443e !important;
+    color: #ffffff !important;
   }
 }
