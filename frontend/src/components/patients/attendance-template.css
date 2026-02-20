@@ -1,7 +1,7 @@
 /* ── Wrapper ─────────────────────────────────────────────────────────────── */
 .attendance-wrapper {
   font-family: "Aptos", "Calibri", sans-serif;
-  max-width: 860px;
+  max-width: 900px;
   margin: 0 auto;
   padding: 1rem;
 }
@@ -24,20 +24,12 @@
   transition: opacity 0.2s;
 }
 
-.btn-print                          { background: #e5e7eb; color: #374151; }
-.btn-download                       { background: #0c443e; color: #ffffff; }
+.btn-print                         { background: #e5e7eb; color: #374151; }
+.btn-download                      { background: #0c443e; color: #ffffff; }
 .btn-print:disabled,
-.btn-download:disabled              { opacity: 0.5; cursor: not-allowed; }
-.btn-print:hover:not(:disabled)     { opacity: 0.8; }
-.btn-download:hover:not(:disabled)  { opacity: 0.85; }
-
-/* ── Contenedor gris de la preview ──────────────────────────────────────── */
-.docx-preview {
-  background: #f3f4f6;
-  padding: 1.5rem;
-  border-radius: 6px;
-  min-height: 400px;
-}
+.btn-download:disabled             { opacity: 0.5; cursor: not-allowed; }
+.btn-print:hover:not(:disabled)    { opacity: 0.8; }
+.btn-download:hover:not(:disabled) { opacity: 0.85; }
 
 /* ── Loading ─────────────────────────────────────────────────────────────── */
 .preview-loading {
@@ -49,6 +41,9 @@
   padding: 4rem;
   color: #6b7280;
   font-size: 0.9rem;
+  background: #f3f4f6;
+  border-radius: 6px;
+  min-height: 300px;
 }
 
 .spinner {
@@ -62,91 +57,37 @@
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ── Documento renderizado por mammoth ───────────────────────────────────── */
-.docx-content {
+/* ── Contenedor docx-preview ─────────────────────────────────────────────── */
+.docx-preview-container {
+  background: #f3f4f6;
+  padding: 1.5rem;
+  border-radius: 6px;
+}
+
+/* docx-preview inyecta elementos con clase .docx-preview-content */
+.docx-preview-content section.docx {
   background: #ffffff;
-  padding: 3rem 3.5rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
   border-radius: 4px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.10);
-  font-family: "Aptos", "Calibri", sans-serif;
-  font-size: 11pt;
-  line-height: 1.5;
-  color: #111827;
+  margin: 0 auto;
+  padding: 2cm !important;
   min-height: 600px;
-}
-
-.docx-content h1 {
-  font-size: 16pt;
-  font-weight: 700;
-  color: #0c443e;
-  margin: 0 0 0.5rem;
-}
-
-.docx-content h2 {
-  font-size: 13pt;
-  font-weight: 700;
-  color: #0c443e;
-  margin: 1rem 0 0.4rem;
-}
-
-.docx-content p { margin: 0.25rem 0; }
-
-/* Tabla generada por mammoth */
-.docx-content table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 0.75rem 0;
-  font-size: 10.5pt;
-}
-
-.docx-content table thead tr {
-  background-color: #0c443e;
-  color: #ffffff;
-  -webkit-print-color-adjust: exact;
-  print-color-adjust: exact;
-}
-
-.docx-content table th {
-  padding: 0.5rem 0.75rem;
-  text-align: center;
-  font-weight: 600;
-}
-
-.docx-content table td {
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #d1d5db;
-  text-align: center;
-}
-
-.docx-content table tbody tr:nth-child(even) {
-  background-color: #f9fafb;
 }
 
 /* ── Print ───────────────────────────────────────────────────────────────── */
 @media print {
   .no-print { display: none !important; }
 
-  #attendance-print-root {
-    display: block !important;
-    padding: 0;
-    max-width: 100%;
-  }
+  body > * { display: none !important; }
+  #attendance-print-root { display: block !important; padding: 0; }
 
-  .docx-preview {
+  .docx-preview-container {
     background: none !important;
     padding: 0 !important;
   }
 
-  .docx-content {
+  .docx-preview-content section.docx {
     box-shadow: none !important;
-    border: none !important;
     padding: 0 !important;
-  }
-
-  .docx-content table thead tr {
-    background-color: #0c443e !important;
-    color: #ffffff !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
   }
 }
